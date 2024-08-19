@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from bson.objectid import ObjectId
 from datetime import datetime
-from app import mongo
+from main import mongo
 import random
 import string
 

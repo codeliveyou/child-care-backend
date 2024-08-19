@@ -13,11 +13,11 @@ app.config.from_pyfile('config.py')
 mongo = PyMongo(app)
 
 # Register Blueprints
-app.register_blueprint(company_blueprint, url_prefix='/api/companies')
-app.register_blueprint(user_blueprint, url_prefix='/api/users')
-app.register_blueprint(statistics_blueprint, url_prefix='/api/statistics')
+# app.register_blueprint(company_blueprint, url_prefix='/api/companies')
+# app.register_blueprint(user_blueprint, url_prefix='/api/users')
+# app.register_blueprint(statistics_blueprint, url_prefix='/api/statistics')
 app.register_blueprint(admin_blueprint, url_prefix='/api/admins')
-app.register_blueprint(invoice_blueprint, url_prefix='/api/invoices')
+# app.register_blueprint(invoice_blueprint, url_prefix='/api/invoices')
 
 if __name__ == "__main__":
     app.run(debug=True)

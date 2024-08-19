@@ -4,7 +4,7 @@ from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 
 client = MongoClient("mongodb://localhost:27017/")
-db = client['avatar_platform']
+db = client['user']
 
 class User:
     def __init__(self, username, email, password, company_id, role='regular_user'):

@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from bson.objectid import ObjectId
 from datetime import datetime
-from app import mongo
+from main import mongo
 from werkzeug.security import generate_password_hash
 
 user_blueprint = Blueprint('user_blueprint', __name__)
