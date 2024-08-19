@@ -1,29 +1,40 @@
-import mongoengine as me
-from mongoengine_mate import ExtendedDocument
+from bson import ObjectId
+from pydantic import BaseModel, EmailStr, Field
+from typing import List, Optional
 from datetime import datetime
 
-class CompanySchema(ExtendedDocument):
-    company_name = me.StringField(required=True, max_length=255)
-    company_description = me.StringField(required=True)
-    company_email = me.EmailField(required=True, unique=True)
-    company_contact_info = me.StringField(required=True)
-    company_payment_options = me.ListField(me.StringField(), required=True)
-    company_code = me.StringField(required=True, unique=True, max_length=6)
-    created_at = me.DateTimeField(default=datetime.utcnow)
-    updated_at = me.DateTimeField(default=datetime.utcnow)
+class CompanySchema(BaseModel):
+    id: Optional[ObjectId] = Field(default=None, alias='id')
+    company_name: str
+    company_description: str
+    company_email: EmailStr
+    company_contact_info: str
+    company_payment_options: List[str]
+    company_code: str
+    created_at: datetime
+    updated_at: datetime
 
-    meta = {
-        "collection": "companies",  # Optional: Specify collection name
-        "strict": False,
-        "indexes": [
-            "company_code",  # Create an index for faster lookups by company_code
-            "company_email",  # Ensure email uniqueness is enforced
-        ],
+    class Config:
+        json_encoders = {
+            ObjectId: lambda x: str(x),
+            datetime: lambda v: v.isoformat(),
+        }
+        allow_population_by_field_name = True
+
+# Optional: MongoDB schema validation (if using MongoDB's validation)
+mongo_schema_validation = {
+    "$jsonSchema": {
+        "bsonType": "object",
+        "required": ["company_name", "company_email", "company_code", "created_at", "updated_at"],
+        "properties": {
+            "company_name": {"bsonType": "string", "description": "must be a string and is required"},
+            "company_description": {"bsonType": "string", "description": "must be a string"},
+            "company_email": {"bsonType": "string", "pattern": "^.+@.+$", "description": "must be a string and match the regex pattern"},
+            "company_contact_info": {"bsonType": "string", "description": "must be a string"},
+            "company_payment_options": {"bsonType": "array", "items": {"bsonType": "string"}, "description": "must be an array of strings"},
+            "company_code": {"bsonType": "string", "description": "must be a string and is required"},
+            "created_at": {"bsonType": "date", "description": "must be a date and is required"},
+            "updated_at": {"bsonType": "date", "description": "must be a date and is required"}
+        }
     }
-
-    def save(self, *args, **kwargs):
-        """Override save method to auto-update `updated_at` field."""
-        if not self.created_at:
-            self.created_at = datetime.utcnow()
-        self.updated_at = datetime.utcnow()
-        return super(CompanySchema, self).save(*args, **kwargs)
+}
