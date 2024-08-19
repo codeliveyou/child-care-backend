@@ -1,52 +1,58 @@
-from flask import Flask, jsonify, request
-from app.models.company import Company
+from flask import Blueprint, request, jsonify
 from bson.objectid import ObjectId
-from pymongo import MongoClient
+from datetime import datetime
+from app import mongo
+import random
+import string
 
-app = Flask(__name__)
+company_blueprint = Blueprint('company_blueprint', __name__)
 
-# MongoDB setup
-client = MongoClient("mongodb://localhost:27017/")
-db = client['avatar_platform']
-
-@app.route('/api/companies', methods=['POST'])
+@company_blueprint.route('/', methods=['POST'])
 def create_company():
     data = request.get_json()
-    new_company = Company(
-        company_name=data['company_name'],
-        company_description=data['company_description'],
-        company_email=data['company_email'],
-        company_contact_info=data['company_contact_info'],
-        company_payment_options=data['company_payment_options'],
-        company_code=data['company_code']
-    )
-    result = new_company.save()
+    company = {
+        "company_name": data['company_name'],
+        "company_description": data['company_description'],
+        "company_email": data['company_email'],
+        "company_contact_info": data['company_contact_info'],
+        "company_payment_options": data['company_payment_options'],
+        "company_code": ''.join(random.choices(string.ascii_uppercase + string.digits, k=6)),
+        "created_at": datetime.utcnow(),
+        "updated_at": datetime.utcnow()
+    }
+    result = mongo.db.companies.insert_one(company)
     return jsonify({"_id": str(result.inserted_id)}), 201
 
-@app.route('/api/companies', methods=['GET'])
+@company_blueprint.route('/', methods=['GET'])
 def get_companies():
-    companies = db.companies.find()
-    return jsonify([{"_id": str(company["_id"]), "company_name": company["company_name"]} for company in companies])
+    companies = list(mongo.db.companies.find())
+    for company in companies:
+        company['_id'] = str(company['_id'])
+    return jsonify(companies), 200
 
-@app.route('/api/companies/<company_id>', methods=['GET'])
+@company_blueprint.route('/<company_id>', methods=['GET'])
 def get_company(company_id):
-    company = Company.find_by_id(company_id)
+    company = mongo.db.companies.find_one({"_id": ObjectId(company_id)})
     if company:
-        company["_id"] = str(company["_id"])
-        return jsonify(company)
-    else:
-        return jsonify({"error": "Company not found"}), 404
+        company['_id'] = str(company['_id'])
+        return jsonify(company), 200
+    return jsonify({"error": "Company not found"}), 404
 
-@app.route('/api/companies/<company_id>', methods=['PUT'])
+@company_blueprint.route('/<company_id>', methods=['PUT'])
 def update_company(company_id):
     data = request.get_json()
-    Company.update_company(company_id, data)
+    update_data = {
+        "company_name": data.get('company_name'),
+        "company_description": data.get('company_description'),
+        "company_email": data.get('company_email'),
+        "company_contact_info": data.get('company_contact_info'),
+        "company_payment_options": data.get('company_payment_options'),
+        "updated_at": datetime.utcnow()
+    }
+    mongo.db.companies.update_one({"_id": ObjectId(company_id)}, {"$set": update_data})
     return jsonify({"message": "Company updated successfully"}), 200
 
-@app.route('/api/companies/<company_id>', methods=['DELETE'])
+@company_blueprint.route('/<company_id>', methods=['DELETE'])
 def delete_company(company_id):
-    Company.delete_company(company_id)
+    mongo.db.companies.delete_one({"_id": ObjectId(company_id)})
     return jsonify({"message": "Company deleted successfully"}), 200
-
-if __name__ == '__main__':
-    app.run(debug=True)
