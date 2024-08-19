@@ -2,9 +2,9 @@ from pymongo import MongoClient
 from bson.objectid import ObjectId
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
-from config import MONGO_URI
+from constants import MONGO_URI
 
-# client = MongoClient("mongodb://localhost:27017/")
+
 client = MongoClient(MONGO_URI)
 db = client['admin']
 

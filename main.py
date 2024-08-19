@@ -1,23 +1,17 @@
-from flask import Flask
-from flask_pymongo import PyMongo
-from app.routes.company_routes import company_blueprint
-from app.routes.user_routes import user_blueprint
-from app.routes.statistics_routes import statistics_blueprint
-from app.routes.admin_routes import admin_blueprint
-from app.routes.invoice_routes import invoice_blueprint
+import werkzeug.serving
+from flask_cors import CORS
+from constants import Constants
+from src.connector import app
+from src.utils.database_utils import DatabaseUtils
+from src.app import jwt
 
-app = Flask(__name__)
-app.config.from_pyfile('config.py')
 
-# Initialize PyMongo
-mongo = PyMongo(app)
+def run_server():
+    cors = CORS(app)
+    DatabaseUtils.init_cluster_db(Constants.DATABASE_URL)
+    werkzeug.run_simple('127.0.0.1', int(Constants.PORT),
+                        app, use_debugger=True, use_reloader=True)
 
-# Register Blueprints
-# app.register_blueprint(company_blueprint, url_prefix='/api/companies')
-# app.register_blueprint(user_blueprint, url_prefix='/api/users')
-# app.register_blueprint(statistics_blueprint, url_prefix='/api/statistics')
-app.register_blueprint(admin_blueprint, url_prefix='/api/admins')
-# app.register_blueprint(invoice_blueprint, url_prefix='/api/invoices')
 
-if __name__ == "__main__":
-    app.run(debug=True)
+if __name__ == '__main__':
+    run_server()
