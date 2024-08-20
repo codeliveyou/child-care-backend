@@ -1,8 +1,8 @@
 venv
 .env
 __pycache__/
-pytest_cache/
-
+.pytest_cache/
+__pycache__
 
 
 constants.py
