@@ -19,24 +19,52 @@ class UserService:
 
     @staticmethod
     def get_one(user_id: str):
-        user = db.users.find_one({"_id": ObjectId(user_id)})
-        if user:
-            user['_id'] = str(user['_id'])
-        return user
+        try:
+            user = db.users.find_one({"_id": ObjectId(user_id)})
+            if user:
+                user['_id'] = str(user['_id'])  # Convert ObjectId to string
+                if user.get('user_company_id'):
+                    user['user_company_id'] = str(user['user_company_id'])  # Convert company ObjectId to string if present
+            return user
+        except Exception as e:
+            # Log the exception
+            print(f"Error fetching user: {e}")
+            return None
+
 
     @staticmethod
     def get_all():
-        users = list(db.users.find())
-        for user in users:
-            user['_id'] = str(user['_id'])
-        return users
+        try:
+            users = list(db.users.find())
+            for user in users:
+                user['_id'] = str(user['_id'])  # Convert ObjectId to string
+                user['user_company_id'] = str(user['user_company_id']) if user.get('user_company_id') else None  # Convert company ObjectId if present
+            return users
+        except Exception as e:
+            # Log the exception
+            print(f"Error fetching users: {e}")
+            return []
+
 
     @staticmethod
     def update_one(user_id: str, body: UpdateUserBody):
-        updates = {k: v for k, v in body.model_dump().items() if v is not None}
-        updates["updated_at"] = datetime.utcnow()
-        db.users.update_one({"_id": ObjectId(user_id)}, {"$set": updates})
-        return db.users.find_one({"_id": ObjectId(user_id)})
+        try:
+            updates = {k: v for k, v in body.model_dump().items() if v is not None}
+            updates["updated_at"] = datetime.utcnow()
+            result = db.users.update_one({"_id": ObjectId(user_id)}, {"$set": updates})
+            if result.matched_count > 0:
+                updated_user = db.users.find_one({"_id": ObjectId(user_id)})
+                if updated_user:
+                    updated_user['_id'] = str(updated_user['_id'])
+                    if updated_user.get('user_company_id'):
+                        updated_user['user_company_id'] = str(updated_user['user_company_id'])
+                return updated_user
+            return None
+        except Exception as e:
+            # Log the exception
+            print(f"Error updating user: {e}")
+            return None
+
 
     @staticmethod
     def delete_one(user_id: str):
