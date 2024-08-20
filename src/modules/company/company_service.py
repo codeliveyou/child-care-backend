@@ -1,4 +1,4 @@
-from company_dtos import CreateCompanyBody, UpdateCompanyBody
+from src.modules.company.company_dtos import CreateCompanyBody, UpdateCompanyBody
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 from datetime import datetime

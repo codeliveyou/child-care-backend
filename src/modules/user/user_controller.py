@@ -1,57 +1,53 @@
-from datetime import timezone, datetime
-from flask import Blueprint, request
-from flask_pydantic import validate
-from src.modules.user.user_dtos import LogineUserBody
-from src.schemas.blocked_token_schema import BlockedTokenSchema
+from flask import Blueprint, request, jsonify
 from src.modules.user.user_service import UserService
-from src.utils.responder import Responder
-from flask_pydantic import validate
-from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token, get_jwt
-from flask_pydantic_docs import openapi_docs
+from src.modules.user.user_dtos import CreateUserBody, UpdateUserBody
+from pydantic import ValidationError
 
 user_controller = Blueprint('users', __name__)
 
+@user_controller.route('/', methods=['POST'])
+def create_user():
+    try:
+        data = request.get_json()
+        body = CreateUserBody(**data)
+        user_id = UserService.create(body)
+        return jsonify({"_id": user_id}), 201
+    except ValidationError as e:
+        return jsonify({"error": e.errors()}), 400
 
-@user_controller.get('/')
-@jwt_required()
-@openapi_docs()
+@user_controller.route('/', methods=['GET'])
 def get_users():
     users = UserService.get_all()
-    return Responder.send(users, 200)
+    return jsonify(users), 200
 
+@user_controller.route('/<user_id>', methods=['GET'])
+def get_user(user_id):
+    user = UserService.get_one(user_id)
+    if user:
+        return jsonify(user), 200
+    return jsonify({"error": "User not found"}), 404
 
-@user_controller.get('/auth_test')
-@jwt_required()
-@openapi_docs()
-def auth_test():
-    current_user = get_jwt_identity()
-    return current_user
+@user_controller.route('/<user_id>', methods=['PUT'])
+def update_user(user_id):
+    try:
+        data = request.get_json()
+        body = UpdateUserBody(**data)
+        updated_user = UserService.update_one(user_id, body)
+        if updated_user:
+            updated_user['_id'] = str(updated_user['_id'])
+            return jsonify(updated_user), 200
+        return jsonify({"error": "User not found"}), 404
+    except ValidationError as e:
+        return jsonify({"error": e.errors()}), 400
 
+@user_controller.route('/<user_id>', methods=['DELETE'])
+def delete_user(user_id):
+    success = UserService.delete_one(user_id)
+    if success:
+        return jsonify({"message": "User deleted successfully"}), 200
+    return jsonify({"error": "User not found"}), 404
 
-@user_controller.post('/login')
-@openapi_docs()
-@validate()
-def login(body: LogineUserBody):
-    logged_in_user = UserService.login(body)
-    # 
-    identity = str(logged_in_user.get('_id'))
-    access_token = create_access_token(identity)
-    # 
-    to_be_returned = {
-        "access_token": access_token,
-    }
-    return to_be_returned
-
-
-@user_controller.delete('/logout')
-@jwt_required()
-@openapi_docs()
-def logout():
-    jti = get_jwt()["jti"]
-    now = datetime.now(timezone.utc)
-
-    BlockedTokenSchema.col().insert_one({
-        "jti": jti,
-        "created_at": now,
-    })
-    return Responder.ok({"success": True})
+@user_controller.route('/delete-all', methods=['DELETE'])
+def delete_all_users():
+    UserService.delete_all()
+    return jsonify({"message": "All users deleted successfully"}), 200

@@ -1,11 +1,11 @@
 from flask import Blueprint, request, jsonify
-from company_service import CompanyService
-from company_dtos import CreateCompanyBody, UpdateCompanyBody
+from src.modules.company.company_service import CompanyService
+from src.modules.company.company_dtos import CreateCompanyBody, UpdateCompanyBody
 from pydantic import ValidationError
 
-company_blueprint = Blueprint('company_blueprint', __name__)
+company_controller = Blueprint('companys', __name__)
 
-@company_blueprint.route('/', methods=['POST'])
+@company_controller.route('/', methods=['POST'])
 def create_company():
     try:
         data = request.get_json()
@@ -15,19 +15,19 @@ def create_company():
     except ValidationError as e:
         return jsonify({"error": e.errors()}), 400
 
-@company_blueprint.route('/', methods=['GET'])
+@company_controller.route('/', methods=['GET'])
 def get_companies():
     companies = CompanyService.get_all()
     return jsonify(companies), 200
 
-@company_blueprint.route('/<company_id>', methods=['GET'])
+@company_controller.route('/<company_id>', methods=['GET'])
 def get_company(company_id):
     company = CompanyService.get_one(company_id)
     if company:
         return jsonify(company), 200
     return jsonify({"error": "Company not found"}), 404
 
-@company_blueprint.route('/<company_id>', methods=['PUT'])
+@company_controller.route('/<company_id>', methods=['PUT'])
 def update_company(company_id):
     try:
         data = request.get_json()
@@ -40,14 +40,14 @@ def update_company(company_id):
     except ValidationError as e:
         return jsonify({"error": e.errors()}), 400
 
-@company_blueprint.route('/<company_id>', methods=['DELETE'])
+@company_controller.route('/<company_id>', methods=['DELETE'])
 def delete_company(company_id):
     success = CompanyService.delete_one(company_id)
     if success:
         return jsonify({"message": "Company deleted successfully"}), 200
     return jsonify({"error": "Company not found"}), 404
 
-@company_blueprint.route('/delete-all', methods=['DELETE'])
+@company_controller.route('/delete-all', methods=['DELETE'])
 def delete_all_companies():
     CompanyService.delete_all()
     return jsonify({"message": "All companies deleted successfully"}), 200
