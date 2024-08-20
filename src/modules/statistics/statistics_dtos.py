@@ -27,5 +27,4 @@ class UpdateStatisticsBody(BaseModel):
     rooms_count: Optional[int] = None
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
-    
-    # No field validators needed in UpdateStatisticsBody
+

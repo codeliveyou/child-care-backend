@@ -76,3 +76,4 @@ class StatisticsService:
     def delete_all():
         db.statistics.delete_many({})
         return True
+

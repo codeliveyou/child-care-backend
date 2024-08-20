@@ -50,3 +50,4 @@ def delete_statistics(stat_id):
 def delete_all_statistics():
     StatisticsService.delete_all()
     return jsonify({"message": "All statistics records deleted successfully"}), 200
+
