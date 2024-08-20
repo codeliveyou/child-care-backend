@@ -1,7 +1,7 @@
 import pytest
 from pymongo import MongoClient
-from company_service import CompanyService
-from company_dtos import CreateCompanyBody, UpdateCompanyBody
+from src.modules.company.company_service import CompanyService
+from src.modules.company.company_dtos import CreateCompanyBody, UpdateCompanyBody
 from bson.objectid import ObjectId
 from constants import Constants
 

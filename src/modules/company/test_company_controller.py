@@ -1,6 +1,6 @@
 import pytest
 from flask import Flask
-from company_controller import company_blueprint
+from src.modules.company.company_controller import company_blueprint
 
 @pytest.fixture
 def client():
