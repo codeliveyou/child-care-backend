@@ -1,14 +1,19 @@
-from enum import Enum
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, Field
+from bson import ObjectId
 from typing import Optional
 
 class CreateAdminBody(BaseModel):
-    # email: str
-    # password: str
-    pass
-    
+    admin_name: str
+    email: EmailStr
+    password_hash: str
+
+    class Config:
+        arbitrary_types_allowed = True
+
 class UpdateAdminBody(BaseModel):
-    # email: str
-    # password: str
-    pass
-    
+    admin_name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    password_hash: Optional[str] = None
+
+    class Config:
+        arbitrary_types_allowed = True

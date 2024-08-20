@@ -1,46 +1,52 @@
-from flask import Blueprint
-from flask_pydantic import validate
+from flask import Blueprint, request, jsonify
 from src.modules.statistics.statistics_service import StatisticsService
 from src.modules.statistics.statistics_dtos import CreateStatisticsBody, UpdateStatisticsBody
-from src.utils.responder import Responder
-from flask_pydantic_docs import openapi_docs
+from pydantic import ValidationError
 
-statistics_controller = Blueprint('statisticss', __name__)
+statistics_controller = Blueprint('statistics', __name__)
 
+@statistics_controller.route('/', methods=['POST'])
+def create_statistics():
+    try:
+        data = request.get_json()
+        body = CreateStatisticsBody(**data)
+        stat_id = StatisticsService.create(body)
+        return jsonify({"_id": stat_id}), 201
+    except ValidationError as e:
+        return jsonify({"error": e.errors()}), 400
 
-@statistics_controller.post('/')
-@openapi_docs()
-@validate()
-def create_statistics(body: CreateStatisticsBody):
-    return StatisticsService.create(body)
+@statistics_controller.route('/', methods=['GET'])
+def get_statistics():
+    stats = StatisticsService.get_all()
+    return jsonify(stats), 200
 
-@statistics_controller.get('/<id>')
-@openapi_docs()
-@validate()
-def get_one_statistics(id):
-    return StatisticsService.get_one(id)
+@statistics_controller.route('/<stat_id>', methods=['GET'])
+def get_statistics_by_id(stat_id):
+    stat = StatisticsService.get_one(stat_id)
+    if stat:
+        return jsonify(stat), 200
+    return jsonify({"error": "Statistics record not found"}), 404
 
-@statistics_controller.get('/')
-@openapi_docs()
-@validate()
-def get_all_statisticss():
-    return StatisticsService.get_all()
+@statistics_controller.route('/<stat_id>', methods=['PUT'])
+def update_statistics(stat_id):
+    try:
+        data = request.get_json()
+        body = UpdateStatisticsBody(**data)
+        updated_stat = StatisticsService.update_one(stat_id, body)
+        if updated_stat:
+            return jsonify(updated_stat), 200
+        return jsonify({"error": "Statistics record not found"}), 404
+    except ValidationError as e:
+        return jsonify({"error": e.errors()}), 400
 
-@statistics_controller.put('/<id>')
-@openapi_docs()
-@validate()
-def update_one_statistics(id, body: UpdateStatisticsBody):
-    return StatisticsService.update_one(id, body)
+@statistics_controller.route('/<stat_id>', methods=['DELETE'])
+def delete_statistics(stat_id):
+    success = StatisticsService.delete_one(stat_id)
+    if success:
+        return jsonify({"message": "Statistics record deleted successfully"}), 200
+    return jsonify({"error": "Statistics record not found"}), 404
 
-@statistics_controller.delete('/<id>')
-@openapi_docs()
-@validate()
-def delete_one_statistics(id):
-    return StatisticsService.delete_one(id)
-
-@statistics_controller.delete('/')
-@openapi_docs()
-@validate()
-def delete_all_statisticss():
-    return StatisticsService.delete_all()
-
+@statistics_controller.route('/delete-all', methods=['DELETE'])
+def delete_all_statistics():
+    StatisticsService.delete_all()
+    return jsonify({"message": "All statistics records deleted successfully"}), 200

@@ -41,4 +41,4 @@ from src.modules.invoice.invoice_controller import invoice_controller
 app.register_blueprint(invoice_controller, url_prefix='/invoices')
 
 from src.modules.statistics.statistics_controller import statistics_controller
-app.register_blueprint(statistics_controller, url_prefix='/statisticss')
+app.register_blueprint(statistics_controller, url_prefix='/statistics')
