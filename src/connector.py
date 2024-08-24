@@ -42,3 +42,9 @@ app.register_blueprint(invoice_controller, url_prefix='/invoices')
 
 from src.modules.statistics.statistics_controller import statistics_controller
 app.register_blueprint(statistics_controller, url_prefix='/statistics')
+
+from src.modules.room.room_controller import room_controller
+app.register_blueprint(room_controller, url_prefix='/rooms')
+
+# from src.modules.userdata.userdata_controller import userdata_controller
+# app.register_blueprint(userdata_controller, url_prefix='/userdatas')

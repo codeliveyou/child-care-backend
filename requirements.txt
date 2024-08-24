@@ -19,3 +19,5 @@ Flask-APScheduler==1.12.3
 pytest==7.1.2
 Flask-Pydantic-Docs~=0.0.17
 mongomock
+boto3
+pydantic[email]
