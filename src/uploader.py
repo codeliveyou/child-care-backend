@@ -10,19 +10,25 @@ s3 = boto3.client(
     aws_secret_access_key=Constants.AWS_SECRET_KEY
 )
 
-def upload_to_s3(file_path, bucket_name, s3_file_name):
+def upload_to_s3(file_path, s3_file_name, bucket_name = Constants.BUCKET_NAME):
     try:
         s3.upload_file(file_path, bucket_name, s3_file_name)
         print(f"Upload successful: {s3_file_name}")
-        return True
+        
+        # Construct the URL to access the uploaded file
+        data_url = f"https://{bucket_name}.s3.amazonaws.com/{s3_file_name}"
+        return data_url
     except FileNotFoundError:
         print("The file was not found")
-        return False
+        return None
     except NoCredentialsError:
         print("Credentials not available")
-        return False
+        return None
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+        return None
 
-def download_from_s3(s3_file_name, bucket_name, download_path):
+def download_from_s3(s3_file_name, download_path, bucket_name = Constants.BUCKET_NAME):
     try:
         s3.download_file(bucket_name, s3_file_name, download_path)
         print(f"Download successful: {download_path}")
