@@ -3,7 +3,7 @@ from src.modules.userdata.userdata_service import UserDataService
 from src.modules.userdata.userdata_dtos import CreateUserDataBody, UpdateUserDataBody
 from pydantic import ValidationError
 
-userdata_controller = Blueprint('userdata', __name__)
+userdata_controller = Blueprint('userdatas', __name__)
 
 @userdata_controller.route('/', methods=['POST'])
 def create_userdata():

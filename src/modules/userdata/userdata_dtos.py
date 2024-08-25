@@ -9,8 +9,16 @@ class CreateUserDataBody(BaseModel):
     data_type: str
     participants: List[str]
 
-    @validator('data_url', 'user_id', 'participants', pre=True, each_item=True)
+    # Validators for single fields (non-list)
+    @validator('data_url', 'user_id', pre=True)
     def validate_and_convert_objectid(cls, value):
+        if not ObjectId.is_valid(value):
+            raise ValueError("Invalid ObjectId format")
+        return str(ObjectId(value))
+
+    # Validator for list fields
+    @validator('participants', pre=True, each_item=True)
+    def validate_participant_ids(cls, value):
         if not ObjectId.is_valid(value):
             raise ValueError("Invalid ObjectId format")
         return str(ObjectId(value))
@@ -22,10 +30,16 @@ class UpdateUserDataBody(BaseModel):
     data_type: Optional[str] = None
     participants: Optional[List[str]] = None
 
-    @validator('data_url', 'user_id', 'participants', pre=True, each_item=True)
+    @validator('data_url', 'user_id', pre=True)
     def validate_and_convert_objectid(cls, value):
         if value and not ObjectId.is_valid(value):
             raise ValueError("Invalid ObjectId format")
         if value:
             return str(ObjectId(value))
         return value
+
+    @validator('participants', pre=True, each_item=True)
+    def validate_participant_ids(cls, value):
+        if value and not ObjectId.is_valid(value):
+            raise ValueError("Invalid ObjectId format")
+        return str(ObjectId(value)) if value else value
