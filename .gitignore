@@ -5,9 +5,7 @@ __pycache__/
 __pycache__
 
 
-constants.py
-
 
 templates
 generator.py
-app
+test.py

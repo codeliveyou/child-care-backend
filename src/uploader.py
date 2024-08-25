@@ -1,16 +1,13 @@
 import boto3
 from botocore.exceptions import NoCredentialsError
+from constants import Constants
 
-# AWS credentials and bucket name
-AWS_ACCESS_KEY = 'your-access-key-id'
-AWS_SECRET_KEY = 'your-secret-access-key'
-BUCKET_NAME = 'your-bucket-name'
 
 # Initialize S3 client
 s3 = boto3.client(
     's3',
-    aws_access_key_id=AWS_ACCESS_KEY,
-    aws_secret_access_key=AWS_SECRET_KEY
+    aws_access_key_id=Constants.AWS_ACCESS_KEY,
+    aws_secret_access_key=Constants.AWS_SECRET_KEY
 )
 
 def upload_to_s3(file_path, bucket_name, s3_file_name):
