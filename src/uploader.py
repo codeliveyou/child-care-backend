@@ -36,3 +36,12 @@ def download_from_s3(s3_file_name, download_path, bucket_name = Constants.BUCKET
     except Exception as e:
         print(f"Download failed: {str(e)}")
         return False
+
+def delete_from_s3(s3_file_name, bucket_name = Constants.BUCKET_NAME):
+    try:
+        s3.delete_object(Bucket=bucket_name, Key=s3_file_name)
+        print(f"Deletion successful: {s3_file_name}")
+        return True
+    except Exception as e:
+        print(f"Deletion failed: {str(e)}")
+        return False
