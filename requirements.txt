@@ -21,3 +21,6 @@ Flask-Pydantic-Docs~=0.0.17
 mongomock
 boto3
 pydantic[email]
+axios
+bcrypt
+PyJWT

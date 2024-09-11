@@ -51,3 +51,23 @@ def delete_user(user_id):
 def delete_all_users():
     UserService.delete_all()
     return jsonify({"message": "All users deleted successfully"}), 200
+
+
+@user_controller.route('/login', methods=['POST'])
+def login_user():
+    try:
+        data = request.get_json()
+        email = data.get('email')
+        password = data.get('password')
+        if not email or not password:
+            return jsonify({"error": "Email and password are required"}), 400
+
+        # Call the service to handle login
+        token, error = UserService.login(email, password)
+        if error:
+            return jsonify({"error": error}), 401
+
+        return jsonify({"token": token}), 200
+
+    except ValidationError as e:
+        return jsonify({"error": e.errors()}), 400

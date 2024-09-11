@@ -1,8 +1,10 @@
 from src.modules.user.user_dtos import CreateUserBody, UpdateUserBody
 from pymongo import MongoClient
 from bson.objectid import ObjectId
-from datetime import datetime
+from datetime import datetime, timedelta
 from constants import Constants
+import bcrypt
+import jwt
 
 client = MongoClient(Constants.DATABASE_URL)
 db = client['CC-database']
@@ -11,7 +13,11 @@ class UserService:
 
     @staticmethod
     def create(body: CreateUserBody):
-        user = body.model_dump()  # Using model_dump() instead of dict()
+        # Hash the user's password before saving it
+        hashed_password = bcrypt.hashpw(body.user_password_hash.encode('utf-8'), bcrypt.gensalt())
+
+        user = body.model_dump()
+        user['user_password_hash'] = hashed_password.decode('utf-8')  # Store as a string
         user["created_at"] = datetime.utcnow()
         user["updated_at"] = datetime.utcnow()
         result = db.users.insert_one(user)
@@ -75,3 +81,36 @@ class UserService:
     def delete_all():
         db.users.delete_many({})
         return True
+
+    @staticmethod
+    def login(email, password):
+        try:
+            # Log the input email and password
+            print(f"Attempting to log in with email: {email}")
+
+            # Find the user by email
+            user = db.users.find_one({"user_email": email})
+            if not user:
+                print("User not found")
+                return None, "User not found"
+
+            # Log the found user information
+            print(f"User found: {user}")
+
+            # Verify the password using bcrypt
+            if not bcrypt.checkpw(password.encode('utf-8'), user['user_password_hash'].encode('utf-8')):
+                print("Password check failed")
+                return None, "Invalid password"
+
+            # Generate JWT token if login is successful
+            token = jwt.encode({
+                'user_id': str(user['_id']),
+                'exp': datetime.utcnow() + timedelta(hours=2)  # Token valid for 2 hours
+            }, 'your_secret_key', algorithm='HS256')
+
+            print("Login successful, token generated")
+            return token, None
+
+        except Exception as e:
+            print(f"Error during login: {e}")
+            return None, "Internal server error"
