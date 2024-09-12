@@ -48,3 +48,6 @@ app.register_blueprint(room_controller, url_prefix='/rooms')
 
 from src.modules.userdata.userdata_controller import userdata_controller
 app.register_blueprint(userdata_controller, url_prefix='/userdatas')
+
+from src.modules.user_activity.user_activity_controller import user_activity_controller
+app.register_blueprint(user_activity_controller, url_prefix='/user_activitys')

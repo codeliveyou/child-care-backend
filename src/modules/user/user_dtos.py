@@ -3,10 +3,21 @@ from typing import Optional
 from bson import ObjectId
 from pydantic import field_validator
 
+class RegisterUserBody(BaseModel):
+    user_name: str
+    user_email: EmailStr
+    user_password: str  # Use plain password
+    company_code: str  # The code to associate user with company
+
+    class Config:
+        arbitrary_types_allowed = True
+
+    # Validation for other fields can be added here if needed
+
 class CreateUserBody(BaseModel):
     user_name: str
     user_email: EmailStr
-    user_password_hash: str
+    user_password_hash: str  # This holds the hashed password
     user_company_id: Optional[ObjectId]
     user_role: str
 

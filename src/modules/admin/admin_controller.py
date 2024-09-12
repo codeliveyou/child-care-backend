@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 from src.modules.admin.admin_service import AdminService
 from src.modules.admin.admin_dtos import CreateAdminBody, UpdateAdminBody
 from pydantic import ValidationError
+from src.modules.user.user_service import UserService
 
 admin_controller = Blueprint('admins', __name__)
 
@@ -71,3 +72,18 @@ def login_admin():
 
     except ValidationError as e:
         return jsonify({"error": e.errors()}), 400
+    
+
+@admin_controller.route('/users', methods=['GET'])
+def get_users():
+    # Extract pagination parameters (default: page 1, page size 10)
+    try:
+        page = int(request.args.get('page', 1))  # Default to page 1
+        page_size = int(request.args.get('page_size', 10))  # Default to page size 10
+
+        # Fetch paginated users from UserService
+        result = UserService.get_all(page=page, page_size=page_size)
+        
+        return jsonify(result), 200
+    except ValueError:
+        return jsonify({"error": "Invalid pagination parameters"}), 400

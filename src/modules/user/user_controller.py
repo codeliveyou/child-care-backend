@@ -1,17 +1,24 @@
 from flask import Blueprint, request, jsonify
 from src.modules.user.user_service import UserService
-from src.modules.user.user_dtos import CreateUserBody, UpdateUserBody
+from src.modules.user.user_dtos import RegisterUserBody
 from pydantic import ValidationError
 
 user_controller = Blueprint('users', __name__)
 
-@user_controller.route('/', methods=['POST'])
-def create_user():
+@user_controller.route('/register', methods=['POST'])
+def register_user():
     try:
+        # Parse and validate the input data
         data = request.get_json()
-        body = CreateUserBody(**data)
-        user_id = UserService.create(body)
-        return jsonify({"_id": user_id}), 201
+        body = RegisterUserBody(**data)
+
+        # Register the user
+        user_id, error = UserService.register(body)
+        if error:
+            return jsonify({"error": error}), 400
+
+        return jsonify({"_id": user_id, "message": "Registration successful!"}), 201
+
     except ValidationError as e:
         return jsonify({"error": e.errors()}), 400
 

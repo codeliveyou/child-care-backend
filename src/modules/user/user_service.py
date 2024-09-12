@@ -1,4 +1,4 @@
-from src.modules.user.user_dtos import CreateUserBody, UpdateUserBody
+from src.modules.user.user_dtos import RegisterUserBody, CreateUserBody, UpdateUserBody
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 from datetime import datetime, timedelta
@@ -11,6 +11,36 @@ db = client['CC-database']
 
 class UserService:
 
+    @staticmethod
+    def register(body: RegisterUserBody):
+        # Hash the user's password before saving it
+        hashed_password = bcrypt.hashpw(body.user_password.encode('utf-8'), bcrypt.gensalt())
+
+        # Find the company using the company_code
+        company = db.companies.find_one({"company_code": body.company_code})
+        if not company:
+            return None, "Invalid company code"
+
+        # Prepare user data for storage
+        user_data = {
+            "user_name": body.user_name,
+            "user_email": body.user_email,
+            "user_password_hash": hashed_password.decode('utf-8'),  # Store hashed password
+            "user_company_id": company['_id'],  # Associate user with company using ObjectId
+            "user_role": "user",  # Default role
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow()
+        }
+
+        # Insert user into database
+        result = db.users.insert_one(user_data)
+        user_id = str(result.inserted_id)
+
+        # Placeholder: Send confirmation email (implement actual email functionality)
+        print(f"Sending confirmation email to {body.user_email}")
+
+        return user_id, None
+    
     @staticmethod
     def create(body: CreateUserBody):
         # Hash the user's password before saving it
@@ -39,17 +69,40 @@ class UserService:
 
 
     @staticmethod
-    def get_all():
+    def get_all(page: int = 1, page_size: int = 10):
+        """Fetch all users with pagination"""
         try:
-            users = list(db.users.find())
+            # Calculate the offset based on page and page_size
+            skip = (page - 1) * page_size
+
+            # Fetch paginated users
+            users = list(db.users.find().skip(skip).limit(page_size))
+            
+            # Convert ObjectIds and other fields to strings
             for user in users:
                 user['_id'] = str(user['_id'])  # Convert ObjectId to string
                 user['user_company_id'] = str(user['user_company_id']) if user.get('user_company_id') else None  # Convert company ObjectId if present
-            return users
+
+            # Get the total user count for pagination metadata
+            total_users = db.users.count_documents({})
+
+            return {
+                "users": users,
+                "total_users": total_users,
+                "page": page,
+                "page_size": page_size,
+                "total_pages": (total_users + page_size - 1) // page_size  # Calculate total pages
+            }
         except Exception as e:
             # Log the exception
             print(f"Error fetching users: {e}")
-            return []
+            return {
+                "users": [],
+                "total_users": 0,
+                "page": page,
+                "page_size": page_size,
+                "total_pages": 0
+            }
 
 
     @staticmethod
