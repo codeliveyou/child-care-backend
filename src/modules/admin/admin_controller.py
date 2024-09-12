@@ -50,3 +50,24 @@ def delete_admin(admin_id):
 def delete_all_admins():
     AdminService.delete_all()
     return jsonify({"message": "All admins deleted successfully"}), 200
+
+@admin_controller.route('/login', methods=['POST'])
+def login_admin():
+    try:
+        data = request.get_json()
+        email = data.get('email')
+        password = data.get('password')
+
+        # Validate email and password
+        if not email or not password:
+            return jsonify({"error": "Email and password are required"}), 400
+
+        # Call the AdminService to handle the login
+        token, error = AdminService.login(email, password)
+        if error:
+            return jsonify({"error": error}), 401
+
+        return jsonify({"token": token}), 200
+
+    except ValidationError as e:
+        return jsonify({"error": e.errors()}), 400
