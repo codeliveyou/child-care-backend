@@ -54,3 +54,6 @@ app.register_blueprint(user_activity_controller, url_prefix='/user_activitys')
 
 from src.modules.company_activity.company_activity_controller import company_activity_controller
 app.register_blueprint(company_activity_controller, url_prefix='/company_activitys')
+
+from src.modules.system_usage.system_usage_controller import system_usage_controller
+app.register_blueprint(system_usage_controller, url_prefix='/system_usages')
