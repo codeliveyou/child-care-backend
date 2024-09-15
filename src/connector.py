@@ -51,3 +51,6 @@ app.register_blueprint(userdata_controller, url_prefix='/userdatas')
 
 from src.modules.user_activity.user_activity_controller import user_activity_controller
 app.register_blueprint(user_activity_controller, url_prefix='/user_activitys')
+
+from src.modules.company_activity.company_activity_controller import company_activity_controller
+app.register_blueprint(company_activity_controller, url_prefix='/company_activitys')

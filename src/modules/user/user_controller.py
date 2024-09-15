@@ -12,12 +12,12 @@ def register_user():
         data = request.get_json()
         body = RegisterUserBody(**data)
 
-        # Register the user
-        user_id, error = UserService.register(body)
-        if error:
-            return jsonify({"error": error}), 400
+        # Register the user and get the user_id and token
+        user_id, token = UserService.register(body)
+        if not user_id:
+            return jsonify({"error": token}), 400  # Error message from the service
 
-        return jsonify({"_id": user_id, "message": "Registration successful!"}), 201
+        return jsonify({"_id": user_id, "message": "Registration successful!", "token": token}), 201
 
     except ValidationError as e:
         return jsonify({"error": e.errors()}), 400
@@ -78,3 +78,15 @@ def login_user():
 
     except ValidationError as e:
         return jsonify({"error": e.errors()}), 400
+
+@user_controller.route('/logout/<user_id>', methods=['POST'])
+def logout_user(user_id):
+    try:
+        # Call the service to handle logout
+        message = UserService.logout(user_id)
+        if "successful" in message:
+            return jsonify({"message": message}), 200
+        return jsonify({"error": message}), 400
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
