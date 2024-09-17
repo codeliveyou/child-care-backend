@@ -62,3 +62,38 @@ class SystemUsageService:
         # Delete all system usage records
         db.system_usage.delete_many({})
         return True
+    
+    @staticmethod
+    def get_aggregated_system_usage(start_date: datetime = None, end_date: datetime = None):
+        # Build the query to filter by date range
+        query = {}
+        if start_date and end_date:
+            query["date"] = {"$gte": start_date, "$lte": end_date}
+
+        # Fetch the filtered system usage records
+        system_usages = list(db.system_usage.find(query))
+
+        # Aggregate statistics
+        total_users = sum([usage['total_users'] for usage in system_usages])
+        active_users = sum([usage['active_users'] for usage in system_usages])
+        total_sessions = sum([usage['total_sessions'] for usage in system_usages])
+        total_duration = sum([usage['average_session_duration'] * usage['total_sessions'] for usage in system_usages])
+
+        # Calculate average session duration across all records
+        average_session_duration = (total_duration / total_sessions) if total_sessions > 0 else 0
+
+        # Calculate trends over time (optional, could be basic statistics like the first and last day stats)
+        trends = {
+            "first_day_users": system_usages[0]['total_users'] if system_usages else 0,
+            "last_day_users": system_usages[-1]['total_users'] if system_usages else 0,
+            "first_day_sessions": system_usages[0]['total_sessions'] if system_usages else 0,
+            "last_day_sessions": system_usages[-1]['total_sessions'] if system_usages else 0
+        }
+
+        return {
+            "total_users": total_users,
+            "active_users": active_users,
+            "total_sessions": total_sessions,
+            "average_session_duration": average_session_duration,
+            "trends": trends
+        }
