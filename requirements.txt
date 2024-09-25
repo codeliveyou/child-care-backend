@@ -24,4 +24,3 @@ pydantic[email]
 axios
 bcrypt
 PyJWT
-APScheduler

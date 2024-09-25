@@ -24,10 +24,10 @@ class RoomService:
     @staticmethod
     def get_one(room_id: str):
         try:
-            room = db.rooms.find_one({"_id": ObjectId(room_id)})
+            print('idididid', room_id)
+            room = db.rooms.find_one({"room_name": room_id})
             if room:
                 room['_id'] = str(room['_id'])  # Convert ObjectId to string
-                room['user_id'] = str(room['user_id'])  # Convert ObjectId to string
                 room['participants'] = [str(participant) for participant in room.get('participants', [])]
             return room
         except Exception as e:
@@ -37,11 +37,11 @@ class RoomService:
     @staticmethod
     def get_all():
         try:
-            rooms = list(db.rooms.find())
-            for room in rooms:
-                room['_id'] = str(room['_id'])  # Convert ObjectId to string
-                room['user_id'] = str(room['user_id'])  # Convert ObjectId to string
-                room['participants'] = [str(participant) for participant in room.get('participants', [])]
+            rooms = list(db.rooms.find())            
+            # for room in rooms:
+            #     room['_id'] = str(room['_id'])  # Convert ObjectId to string
+            #     room['user_id'] = str(room['user_id'])  # Convert ObjectId to string
+            #     room['participants'] = [str(participant) for participant in room.get('participants', [])]
             return rooms
         except Exception as e:
             print(f"Error fetching rooms: {e}")

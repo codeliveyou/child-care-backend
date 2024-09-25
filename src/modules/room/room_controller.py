@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 from src.modules.room.room_service import RoomService
 from src.modules.room.room_dtos import CreateRoomBody, UpdateRoomBody
 from pydantic import ValidationError
+from datetime import datetime
 
 room_controller = Blueprint('rooms', __name__)
 
@@ -73,4 +74,47 @@ def delete_all_rooms():
         return jsonify({"message": "All rooms deleted successfully"}), 200
     except Exception as e:
         print(f"Error in delete_all_rooms: {e}")
+        return jsonify({"error": str(e)}), 500
+    
+@room_controller.route('/fetch_rooms_data', methods=['GET'])
+def fetch_rooms_data():
+
+    def format_created_at(created_at):
+        current_time = datetime.now()
+
+        if created_at.date() == current_time.date():
+            return created_at.strftime('%H:%M')
+        else:
+            return created_at.strftime('%d:%H:%M')
+
+    def serialzie_room(room):
+        return {
+        '_id': str(room['_id']),
+        'room_name': room['room_name'],
+        'host': room['host'],
+        'created_at': format_created_at(room['created_at']) if isinstance(room['created_at'], datetime) else None,
+        'ended_at': room['ended_at'].isoformat() if isinstance(room['ended_at'], datetime) else None,
+        'participants_count': room['participants_count']
+    }
+
+    try:
+        rooms = RoomService.get_all()
+        serialzied_rooms = [serialzie_room(room) for room in rooms]
+        return jsonify(serialzied_rooms), 200
+    except Exception as e:
+        print(f"Error in fetching rooms data: {e}")
+        return jsonify({"error": str(e)}), 500
+    
+@room_controller.route('/fetch_room_data', methods=['POST'])
+def fetch_room_data():
+
+    try:
+        data = request.get_json()
+        print('data',data)
+        room = RoomService.get_one(data['roomName'])
+        return jsonify({"data": room}), 200
+    except ValidationError as e:
+        return jsonify({"error": e.errors()}), 400
+    except Exception as e:
+        print(f"Error in create_room: {e}")
         return jsonify({"error": str(e)}), 500

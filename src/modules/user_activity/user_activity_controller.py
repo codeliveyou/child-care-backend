@@ -1,48 +1,46 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint
 from flask_pydantic import validate
-from src.modules.user_activity.user_activity_service import UserActivityService
-from src.modules.user_activity.user_activity_dtos import CreateUserActivityBody, UpdateUserActivityBody
+from src.modules.user_activity.user_activity_service import User_activityService
+from src.modules.user_activity.user_activity_dtos import CreateUser_activityBody, UpdateUser_activityBody
+from src.utils.responder import Responder
+from flask_pydantic_docs import openapi_docs
 
 user_activity_controller = Blueprint('user_activitys', __name__)
 
+
 @user_activity_controller.post('/')
+@openapi_docs()
 @validate()
-def create_user_activity(body: CreateUserActivityBody):
-    activity_id = UserActivityService.create(body)
-    return jsonify({"_id": activity_id, "message": "User activity created successfully"}), 201
+def create_user_activity(body: CreateUser_activityBody):
+    return User_activityService.create(body)
 
 @user_activity_controller.get('/<id>')
+@openapi_docs()
 @validate()
 def get_one_user_activity(id):
-    activity = UserActivityService.get_one(id)
-    if activity:
-        return jsonify(activity), 200
-    return jsonify({"error": "User activity not found"}), 404
+    return User_activityService.get_one(id)
 
 @user_activity_controller.get('/')
+@openapi_docs()
 @validate()
-def get_all_user_activities():
-    activities = UserActivityService.get_all()
-    return jsonify(activities), 200
+def get_all_user_activitys():
+    return User_activityService.get_all()
 
 @user_activity_controller.put('/<id>')
+@openapi_docs()
 @validate()
-def update_one_user_activity(id, body: UpdateUserActivityBody):
-    updated_activity = UserActivityService.update_one(id, body)
-    if updated_activity:
-        return jsonify(updated_activity), 200
-    return jsonify({"error": "User activity not found"}), 404
+def update_one_user_activity(id, body: UpdateUser_activityBody):
+    return User_activityService.update_one(id, body)
 
 @user_activity_controller.delete('/<id>')
+@openapi_docs()
 @validate()
 def delete_one_user_activity(id):
-    success = UserActivityService.delete_one(id)
-    if success:
-        return jsonify({"message": "User activity deleted successfully"}), 200
-    return jsonify({"error": "User activity not found"}), 404
+    return User_activityService.delete_one(id)
 
 @user_activity_controller.delete('/')
+@openapi_docs()
 @validate()
-def delete_all_user_activities():
-    UserActivityService.delete_all()
-    return jsonify({"message": "All user activities deleted successfully"}), 200
+def delete_all_user_activitys():
+    return User_activityService.delete_all()
+

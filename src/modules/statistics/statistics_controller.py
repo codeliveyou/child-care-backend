@@ -51,20 +51,3 @@ def delete_all_statistics():
     StatisticsService.delete_all()
     return jsonify({"message": "All statistics records deleted successfully"}), 200
 
-@statistics_controller.route('/users', methods=['GET'])
-def get_user_statistics():
-    try:
-        # Get aggregated user statistics
-        user_stats = StatisticsService.get_user_statistics()
-        return jsonify(user_stats), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-@statistics_controller.route('/companies', methods=['GET'])
-def get_company_statistics():
-    try:
-        # Get aggregated company statistics
-        company_stats = StatisticsService.get_company_statistics()
-        return jsonify(company_stats), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
