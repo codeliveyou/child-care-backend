@@ -24,3 +24,4 @@ pydantic[email]
 axios
 bcrypt
 PyJWT
+flask_socketio
