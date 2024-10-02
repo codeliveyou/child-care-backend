@@ -8,6 +8,8 @@ from src.utils.database_utils import DatabaseUtils
 from src.app import jwt
 
 
+
+
 def run_server():
     cors = CORS(app)
     DatabaseUtils.init_cluster_db(Constants.DATABASE_URL)
