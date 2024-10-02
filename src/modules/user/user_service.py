@@ -1,10 +1,10 @@
-from src.modules.user.user_dtos import RegisterUserBody, CreateUserBody, UpdateUserBody
+from src.modules.user.user_dtos import RegisterUserBody, UpdateUserBody
 from pymongo import MongoClient
 from bson.objectid import ObjectId
-from datetime import datetime, timedelta
+from datetime import datetime
 from constants import Constants
 import bcrypt
-import jwt
+from flask_jwt_extended import create_access_token
 
 client = MongoClient(Constants.DATABASE_URL)
 db = client['CC-database']
@@ -13,6 +13,11 @@ class UserService:
 
     @staticmethod
     def register(body: RegisterUserBody):
+        # Check if the email is already registered
+        existing_user = db.users.find_one({"user_email": body.user_email})
+        if existing_user:
+            return None, "Email is already registered"
+
         # Hash the user's password before saving it
         hashed_password = bcrypt.hashpw(body.user_password.encode('utf-8'), bcrypt.gensalt())
 
@@ -27,7 +32,7 @@ class UserService:
             "user_email": body.user_email,
             "user_password_hash": hashed_password.decode('utf-8'),  # Store hashed password
             "user_company_id": company['_id'],  # Associate user with company using ObjectId
-            "user_role": "user",  # Default role
+            "account_description": body.account_description,  # Include account description
             "created_at": datetime.utcnow(),
             "updated_at": datetime.utcnow()
         }
@@ -36,22 +41,14 @@ class UserService:
         result = db.users.insert_one(user_data)
         user_id = str(result.inserted_id)
 
+        # Generate JWT token using Flask-JWT-Extended
+        token = create_access_token(identity=user_id)
+
         # Placeholder: Send confirmation email (implement actual email functionality)
         print(f"Sending confirmation email to {body.user_email}")
 
-        return user_id, None
-    
-    @staticmethod
-    def create(body: CreateUserBody):
-        # Hash the user's password before saving it
-        hashed_password = bcrypt.hashpw(body.user_password_hash.encode('utf-8'), bcrypt.gensalt())
-
-        user = body.model_dump()
-        user['user_password_hash'] = hashed_password.decode('utf-8')  # Store as a string
-        user["created_at"] = datetime.utcnow()
-        user["updated_at"] = datetime.utcnow()
-        result = db.users.insert_one(user)
-        return str(result.inserted_id)
+        # Return the user ID and the token
+        return user_id, token
 
     @staticmethod
     def get_one(user_id: str):
@@ -63,7 +60,6 @@ class UserService:
                     user['user_company_id'] = str(user['user_company_id'])  # Convert company ObjectId to string if present
             return user
         except Exception as e:
-            # Log the exception
             print(f"Error fetching user: {e}")
             return None
 
@@ -77,7 +73,7 @@ class UserService:
 
             # Fetch paginated users
             users = list(db.users.find().skip(skip).limit(page_size))
-            
+
             # Convert ObjectIds and other fields to strings
             for user in users:
                 user['_id'] = str(user['_id'])  # Convert ObjectId to string
@@ -138,7 +134,6 @@ class UserService:
     @staticmethod
     def login(email, password):
         try:
-            # Log the input email and password
             print(f"Attempting to log in with email: {email}")
 
             # Find the user by email
@@ -147,23 +142,52 @@ class UserService:
                 print("User not found")
                 return None, "User not found"
 
-            # Log the found user information
-            print(f"User found: {user}")
-
             # Verify the password using bcrypt
             if not bcrypt.checkpw(password.encode('utf-8'), user['user_password_hash'].encode('utf-8')):
                 print("Password check failed")
                 return None, "Invalid password"
 
             # Generate JWT token if login is successful
-            token = jwt.encode({
-                'user_id': str(user['_id']),
-                'exp': datetime.utcnow() + timedelta(hours=2)  # Token valid for 2 hours
-            }, 'your_secret_key', algorithm='HS256')
+            token = create_access_token(identity=str(user['_id']))
 
-            print("Login successful, token generated")
+            print(f"Login successful, token generated.")
             return token, None
 
         except Exception as e:
             print(f"Error during login: {e}")
             return None, "Internal server error"
+    
+    
+    @staticmethod
+    def logout(user_id):
+        try:
+            # Find the most recent login entry for the user (i.e., the one without a logout time)
+            activity = db.user_activity.find_one({
+                "user_id": ObjectId(user_id),
+                "logout_time": None  # Ensure we only find the open session
+            }, sort=[("login_time", -1)])  # Sort by login time to get the latest
+
+            if not activity:
+                return "No active session found for user."
+
+            # Record the logout time
+            logout_time = datetime.utcnow()
+
+            # Calculate the activity duration (in seconds)
+            login_time = activity["login_time"]
+            activity_duration = (logout_time - login_time).total_seconds()
+
+            # Update the user_activity log with logout_time and activity_duration
+            update_data = {
+                "logout_time": logout_time,
+                "activity_duration": activity_duration
+            }
+
+            db.user_activity.update_one({"_id": activity["_id"]}, {"$set": update_data})
+
+            print(f"Logout successful, activity duration: {activity_duration} seconds")
+            return "Logout successful"
+
+        except Exception as e:
+            print(f"Error during logout: {e}")
+            return "Internal server error"

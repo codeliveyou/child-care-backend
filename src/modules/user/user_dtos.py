@@ -8,29 +8,10 @@ class RegisterUserBody(BaseModel):
     user_email: EmailStr
     user_password: str  # Use plain password
     company_code: str  # The code to associate user with company
+    account_description: Optional[str] = None  # New optional field for account description
 
     class Config:
         arbitrary_types_allowed = True
-
-    # Validation for other fields can be added here if needed
-
-class CreateUserBody(BaseModel):
-    user_name: str
-    user_email: EmailStr
-    user_password_hash: str  # This holds the hashed password
-    user_company_id: Optional[ObjectId]
-    user_role: str
-
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
-    @field_validator('user_company_id', mode='before')
-    def validate_objectid(cls, v):
-        if isinstance(v, str):
-            try:
-                return ObjectId(v)
-            except Exception:
-                raise ValueError("Invalid ObjectId format")
-        return v
 
 class UpdateUserBody(BaseModel):
     user_name: Optional[str] = None
@@ -49,3 +30,4 @@ class UpdateUserBody(BaseModel):
             except Exception:
                 raise ValueError("Invalid ObjectId format")
         return v
+
