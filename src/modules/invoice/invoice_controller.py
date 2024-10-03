@@ -3,7 +3,7 @@ from src.modules.invoice.invoice_service import InvoiceService
 from src.modules.invoice.invoice_dtos import CreateInvoiceBody, UpdateInvoiceBody
 from pydantic import ValidationError
 
-invoice_controller = Blueprint('api/invoices', __name__)
+invoice_controller = Blueprint('invoices', __name__)
 
 @invoice_controller.route('/', methods=['POST'])
 def create_invoice():

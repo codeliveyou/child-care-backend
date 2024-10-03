@@ -5,7 +5,7 @@ from src.modules.company.company_controller import company_blueprint
 @pytest.fixture
 def client():
     app = Flask(__name__)
-    app.register_blueprint(company_blueprint, url_prefix='/company')
+    app.register_blueprint(company_blueprint, url_prefix='/api/company')
     app.config['TESTING'] = True
     client = app.test_client()
     yield client

@@ -59,44 +59,44 @@ redoc.register(app)
 # BP REG
 from src.modules.root.root_controller import root_controller
 
-app.register_blueprint(root_controller, url_prefix="/")
+app.register_blueprint(root_controller, url_prefix="/api")
 from src.modules.user.user_controller import user_controller
 
-app.register_blueprint(user_controller, url_prefix="/users")
+app.register_blueprint(user_controller, url_prefix="/api/users")
 
 from src.modules.admin.admin_controller import admin_controller
 
-app.register_blueprint(admin_controller, url_prefix="/admins")
+app.register_blueprint(admin_controller, url_prefix="/api/admins")
 
 from src.modules.company.company_controller import company_controller
 
-app.register_blueprint(company_controller, url_prefix="/companys")
+app.register_blueprint(company_controller, url_prefix="/api/companys")
 
 from src.modules.invoice.invoice_controller import invoice_controller
 
-app.register_blueprint(invoice_controller, url_prefix="/invoices")
+app.register_blueprint(invoice_controller, url_prefix="/api/invoices")
 
 from src.modules.statistics.statistics_controller import statistics_controller
 
-app.register_blueprint(statistics_controller, url_prefix="/statistics")
+app.register_blueprint(statistics_controller, url_prefix="/api/statistics")
 
 from src.modules.room.room_controller import room_controller
 
-app.register_blueprint(room_controller, url_prefix="/rooms")
+app.register_blueprint(room_controller, url_prefix="/api/rooms")
 
 from src.modules.userdata.userdata_controller import userdata_controller
 
-app.register_blueprint(userdata_controller, url_prefix="/userdatas")
+app.register_blueprint(userdata_controller, url_prefix="/api/userdatas")
 
 from src.modules.user_activity.user_activity_controller import user_activity_controller
 
-app.register_blueprint(user_activity_controller, url_prefix="/user_activitys")
+app.register_blueprint(user_activity_controller, url_prefix="/api/user_activitys")
 
 from src.modules.company_activity.company_activity_controller import company_activity_controller
-app.register_blueprint(company_activity_controller, url_prefix='/company_activitys')
+app.register_blueprint(company_activity_controller, url_prefix='/api/company_activitys')
 
 from src.modules.system_usage.system_usage_controller import system_usage_controller
-app.register_blueprint(system_usage_controller, url_prefix='/system_usages')
+app.register_blueprint(system_usage_controller, url_prefix='/api/system_usages')
 
 import os
 import requests
