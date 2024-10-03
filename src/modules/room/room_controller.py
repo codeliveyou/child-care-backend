@@ -4,7 +4,7 @@ from src.modules.room.room_dtos import CreateRoomBody, UpdateRoomBody
 from pydantic import ValidationError
 from datetime import datetime
 
-room_controller = Blueprint('rooms', __name__)
+room_controller = Blueprint('api/rooms', __name__)
 
 @room_controller.route('/', methods=['POST'])
 def create_room():

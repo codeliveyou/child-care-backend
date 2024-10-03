@@ -3,7 +3,7 @@ from src.modules.statistics.statistics_service import StatisticsService
 from src.modules.statistics.statistics_dtos import CreateStatisticsBody, UpdateStatisticsBody
 from pydantic import ValidationError
 
-statistics_controller = Blueprint('statistics', __name__)
+statistics_controller = Blueprint('api/statistics', __name__)
 
 @statistics_controller.route('/', methods=['POST'])
 def create_statistics():

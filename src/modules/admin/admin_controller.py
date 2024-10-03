@@ -4,7 +4,7 @@ from src.modules.admin.admin_dtos import CreateAdminBody, UpdateAdminBody
 from pydantic import ValidationError
 from src.modules.user.user_service import UserService
 
-admin_controller = Blueprint('admins', __name__)
+admin_controller = Blueprint('api/admins', __name__)
 
 @admin_controller.route('/', methods=['POST'])
 def create_admin():

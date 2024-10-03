@@ -3,7 +3,7 @@ from src.modules.company.company_service import CompanyService
 from src.modules.company.company_dtos import CreateCompanyBody, UpdateCompanyBody
 from pydantic import ValidationError
 
-company_controller = Blueprint('companys', __name__)
+company_controller = Blueprint('api/companys', __name__)
 
 @company_controller.route('/', methods=['POST'])
 def create_company():

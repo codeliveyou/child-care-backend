@@ -4,7 +4,7 @@ from src.modules.user.user_dtos import RegisterUserBody, UpdateUserBody
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from pydantic import ValidationError
 
-user_controller = Blueprint('users', __name__)
+user_controller = Blueprint('api/users', __name__)
 
 @user_controller.route('/register', methods=['POST'])
 def register_user():

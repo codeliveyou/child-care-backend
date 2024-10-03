@@ -25,3 +25,4 @@ axios
 bcrypt
 PyJWT
 flask_socketio
+eventlet
