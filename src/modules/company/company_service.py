@@ -12,7 +12,7 @@ class CompanyService:
 
     @staticmethod
     def create(body: CreateCompanyBody):
-        company = body.model_dump()  # Replaced dict() with model_dump()
+        company = body.model_dump()  # Use model_dump to convert Pydantic model to a dict
         company["company_code"] = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
         company["created_at"] = datetime.utcnow()
         company["updated_at"] = datetime.utcnow()
