@@ -5,6 +5,9 @@ from constants import Constants
 from src.modules.admin.admin_dtos import CreateAdminBody, UpdateAdminBody
 import bcrypt
 import jwt
+from flask_jwt_extended import create_access_token
+
+
 
 client = MongoClient(Constants.DATABASE_URL)
 db = client['CC-database']
@@ -96,11 +99,8 @@ class AdminService:
             if not bcrypt.checkpw(password.encode('utf-8'), admin['password_hash'].encode('utf-8')):
                 return None, "Invalid password"
 
-            # Generate JWT token if login is successful
-            token = jwt.encode({
-                'admin_id': str(admin['_id']),
-                'exp': datetime.utcnow() + timedelta(hours=2)  # Token valid for 2 hours
-            }, 'your_secret_key', algorithm='HS256')
+            # Generate JWT token with admin_id as the identity
+            token = create_access_token(identity=str(admin['_id']))  # Use Flask-JWT-Extended to create a token
 
             return token, None
 

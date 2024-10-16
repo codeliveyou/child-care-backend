@@ -3,6 +3,8 @@ from src.modules.admin.admin_service import AdminService
 from src.modules.admin.admin_dtos import CreateAdminBody, UpdateAdminBody
 from pydantic import ValidationError
 from src.modules.user.user_service import UserService
+from flask_jwt_extended import jwt_required, get_jwt_identity
+
 
 admin_controller = Blueprint('admins', __name__)
 
@@ -87,3 +89,24 @@ def get_users():
         return jsonify(result), 200
     except ValueError:
         return jsonify({"error": "Invalid pagination parameters"}), 400
+
+@admin_controller.route('/me', methods=['GET'])
+@jwt_required()  # Enforce JWT authentication
+def get_current_admin():
+    try:
+        # Extract the admin_id from the JWT token
+        admin_id = get_jwt_identity()
+
+        # Fetch the admin details from the database
+        admin = AdminService.get_one(admin_id)
+        if admin:
+            # Prepare the response with the necessary fields
+            response = {
+                'email': admin.get('email')
+            }
+            return jsonify(response), 200
+        else:
+            return jsonify({"error": "Admin not found"}), 404
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
