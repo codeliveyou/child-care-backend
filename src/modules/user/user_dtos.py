@@ -6,9 +6,9 @@ from pydantic import field_validator
 class RegisterUserBody(BaseModel):
     user_name: str
     user_email: EmailStr
-    user_password: str  # Use plain password
-    company_code: str  # The code to associate user with company
-    account_description: Optional[str] = None  # New optional field for account description
+    user_password: str
+    company_code: str
+    account_description: Optional[str] = None
 
     class Config:
         arbitrary_types_allowed = True

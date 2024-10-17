@@ -191,3 +191,27 @@ class UserService:
         except Exception as e:
             print(f"Error during logout: {e}")
             return "Internal server error"
+
+    @staticmethod
+    def get_users_by_company_id(company_id: str):
+        """Fetch all users belonging to a specific company"""
+        try:
+            users = list(db.users.find({"user_company_id": ObjectId(company_id)}))
+            
+            # Format the users list
+            formatted_users = []
+            for user in users:
+                formatted_users.append({
+                    "user_name": user.get('user_name'),
+                    "account_description": user.get('account_description', '-'),
+                    "user_email": user.get('user_email', '-'),
+                    "created_at": user.get('created_at').strftime("%d-%m-%Y") if user.get('created_at') else '-',
+                    "use_time": "10h",  # Placeholder for use time
+                    "status": "Active"  # Placeholder for status
+                })
+            
+            return formatted_users
+
+        except Exception as e:
+            print(f"Error fetching users for company_id {company_id}: {e}")
+            return []

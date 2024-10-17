@@ -32,6 +32,13 @@ class CompanyService:
         for company in companies:
             company['_id'] = str(company['_id'])
         return companies
+    
+    @staticmethod
+    def get_by_admin_email(company_admin_email: str):
+        companies = list(db.companies.find({"company_admin_email": company_admin_email}))
+        for company in companies:
+            company['_id'] = str(company['_id'])
+        return companies
 
     @staticmethod
     def update_one(company_id: str, body: UpdateCompanyBody):
@@ -49,3 +56,16 @@ class CompanyService:
     def delete_all():
         db.companies.delete_many({})
         return True
+
+    @staticmethod
+    def get_by_admin_email(company_admin_email: str):
+        """Fetch companies that match the given admin email"""
+        try:
+            companies = list(db.companies.find({"company_admin_email": company_admin_email}))
+            for company in companies:
+                company['_id'] = str(company['_id'])
+            return companies
+
+        except Exception as e:
+            print(f"Error fetching companies by admin email {company_admin_email}: {e}")
+            return []

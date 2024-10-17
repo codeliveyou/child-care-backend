@@ -1,7 +1,8 @@
 from flask import Blueprint, request, jsonify
 from src.modules.company.company_service import CompanyService
-from src.modules.company.company_dtos import CreateCompanyBody, UpdateCompanyBody
+from src.modules.company.company_dtos import CreateCompanyBody, UpdateCompanyBody, FilterCompanyByAdminEmail
 from pydantic import ValidationError
+from src.modules.user.user_service import UserService
 
 company_controller = Blueprint('companys', __name__)
 
@@ -15,10 +16,20 @@ def create_company():
     except ValidationError as e:
         return jsonify({"error": e.errors()}), 400
 
-@company_controller.route('/', methods=['GET'])
-def get_companies():
-    companies = CompanyService.get_all()
-    return jsonify(companies), 200
+# New endpoint for filtering by company_admin_email
+@company_controller.route('/filter-by-admin-email', methods=['POST'])
+def get_companies_by_admin_email():
+    try:
+        data = request.get_json()
+        body = FilterCompanyByAdminEmail(**data)
+
+        # Fetch companies by admin email
+        companies = CompanyService.get_by_admin_email(body.company_admin_email)
+
+        return jsonify(companies), 200
+
+    except ValidationError as e:
+        return jsonify({"error": e.errors()}), 400
 
 @company_controller.route('/<company_id>', methods=['GET'])
 def get_company(company_id):
@@ -51,3 +62,42 @@ def delete_company(company_id):
 def delete_all_companies():
     CompanyService.delete_all()
     return jsonify({"message": "All companies deleted successfully"}), 200
+
+@company_controller.route('/companies-and-users', methods=['POST'])
+def get_companies_and_users():
+    try:
+        # Parse request body
+        data = request.get_json()
+        body = FilterCompanyByAdminEmail(**data)
+
+        # Fetch companies by admin email
+        companies = CompanyService.get_by_admin_email(body.company_admin_email)
+
+        # If no companies found, return an empty response
+        if not companies:
+            return jsonify([]), 200
+
+        # Prepare the result with companies and their users
+        result = []
+        for company in companies:
+            # Fetch users associated with the company
+            users = UserService.get_users_by_company_id(company['_id'])
+            
+            # Add the users to the company data
+            result.append({
+                "company_name": company.get('company_name'),
+                "company_description": company.get('company_description'),
+                "company_email": company.get('company_email'),
+                "created_at": company.get('created_at').strftime("%d-%m-%Y"),
+                "use_time": "40h",
+                "status": "Active",
+                "users": users
+            })
+
+        return jsonify(result), 200
+
+    except ValidationError as e:
+        return jsonify({"error": e.errors()}), 400
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
