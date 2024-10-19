@@ -5,9 +5,12 @@ from datetime import datetime
 from constants import Constants
 import bcrypt
 from flask_jwt_extended import create_access_token
+import gridfs
+from io import BytesIO
 
 client = MongoClient(Constants.DATABASE_URL)
 db = client['CC-database']
+fs = gridfs.GridFS(db)
 
 class UserService:
 
@@ -49,6 +52,26 @@ class UserService:
 
         # Return the user ID and the token
         return user_id, token
+    
+    @staticmethod
+    def change_profile_picture(user_id: str, picture_data: bytes, filename: str):
+        try:
+            # Save the image to GridFS
+            picture_id = fs.put(picture_data, filename=filename, content_type="image/jpeg")
+
+            # Update the user's profile with the new profile picture ID
+            result = db.users.update_one(
+                {"_id": ObjectId(user_id)},
+                {"$set": {"profile_picture": str(picture_id), "updated_at": datetime.utcnow()}}
+            )
+
+            if result.matched_count > 0:
+                return True, str(picture_id)
+            return False, None
+
+        except Exception as e:
+            print(f"Error changing profile picture: {e}")
+            return False, None
 
     @staticmethod
     def get_one(user_id: str):

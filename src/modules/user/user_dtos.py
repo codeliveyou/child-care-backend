@@ -9,6 +9,7 @@ class RegisterUserBody(BaseModel):
     user_password: str
     company_code: str
     account_description: Optional[str] = None
+    profile_picture: Optional[str] = None
 
     class Config:
         arbitrary_types_allowed = True
@@ -19,6 +20,7 @@ class UpdateUserBody(BaseModel):
     user_password_hash: Optional[str] = None
     user_company_id: Optional[ObjectId] = None
     user_role: Optional[str] = None
+    profile_picture: Optional[str] = None  # New field for profile picture
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 

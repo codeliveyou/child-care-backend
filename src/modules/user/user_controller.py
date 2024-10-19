@@ -3,6 +3,7 @@ from src.modules.user.user_service import UserService
 from src.modules.user.user_dtos import RegisterUserBody, UpdateUserBody
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from pydantic import ValidationError
+from werkzeug.utils import secure_filename
 
 user_controller = Blueprint('users', __name__)
 
@@ -18,6 +19,50 @@ def register_user():
         return jsonify({"_id": user_id, "message": "Registration successful!", "token": token}), 201
     except ValidationError as e:
         return jsonify({"error": e.errors()}), 400
+
+@user_controller.route('/change-profile-picture', methods=['PUT'])
+@jwt_required()  # Requires user authentication via JWT
+def change_profile_picture():
+    try:
+        # Get the current user's ID from the JWT token
+        user_id = get_jwt_identity()
+
+        # Check if the request contains the file
+        if 'profile_picture' not in request.files:
+            return jsonify({"error": "No profile picture uploaded"}), 400
+
+        # Get the profile picture file
+        file = request.files['profile_picture']
+
+        if file.filename == '':
+            return jsonify({"error": "No selected file"}), 400
+
+        # Secure the filename
+        filename = secure_filename(file.filename)
+
+        # Read the file data
+        picture_data = file.read()
+
+        # Call the service to change the profile picture
+        success, picture_id = UserService.change_profile_picture(user_id, picture_data, filename)
+
+        if success:
+            return jsonify({"message": "Profile picture updated successfully", "picture_id": picture_id}), 200
+        else:
+            return jsonify({"error": "Failed to update profile picture"}), 500
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@user_controller.route('/profile-picture/<picture_id>', methods=['GET'])
+def get_profile_picture(picture_id):
+    try:
+        # Fetch the picture from GridFS
+        picture = fs.get(ObjectId(picture_id))
+        return send_file(BytesIO(picture.read()), mimetype=picture.content_type)
+
+    except gridfs.errors.NoFile:
+        return jsonify({"error": "Profile picture not found"}), 404
 
 @user_controller.route('/', methods=['GET'])
 def get_users():

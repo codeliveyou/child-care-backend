@@ -60,6 +60,7 @@ redoc.register(app)
 from src.modules.root.root_controller import root_controller
 
 app.register_blueprint(root_controller, url_prefix="/api")
+
 from src.modules.user.user_controller import user_controller
 
 app.register_blueprint(user_controller, url_prefix="/api/users")
@@ -93,10 +94,15 @@ from src.modules.user_activity.user_activity_controller import user_activity_con
 app.register_blueprint(user_activity_controller, url_prefix="/api/user_activitys")
 
 from src.modules.company_activity.company_activity_controller import company_activity_controller
+
 app.register_blueprint(company_activity_controller, url_prefix='/api/company_activitys')
 
 from src.modules.system_usage.system_usage_controller import system_usage_controller
+
 app.register_blueprint(system_usage_controller, url_prefix='/api/system_usages')
+
+# from src.modules.setting.setting_controller import setting_controller
+# app.register_blueprint(setting_controller, url_prefix='/api/setting')
 
 import os
 import requests
