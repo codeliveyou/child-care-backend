@@ -1,9 +1,10 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, send_file
 from src.modules.user.user_service import UserService
 from src.modules.user.user_dtos import RegisterUserBody, UpdateUserBody
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from pydantic import ValidationError
 from werkzeug.utils import secure_filename
+from io import BytesIO
 
 user_controller = Blueprint('users', __name__)
 
@@ -19,6 +20,43 @@ def register_user():
         return jsonify({"_id": user_id, "message": "Registration successful!", "token": token}), 201
     except ValidationError as e:
         return jsonify({"error": e.errors()}), 400
+
+@user_controller.route('/change-profile-info', methods=['PUT'])
+@jwt_required()  # Requires user authentication via JWT
+def change_profile_info():
+    try:
+        # Get the current user's ID from the JWT token
+        user_id = get_jwt_identity()
+
+        # Parse the request JSON
+        data = request.get_json()
+        user_name = data.get('user_name')
+        user_email = data.get('user_email')
+        account_description = data.get('account_description')
+        old_password = data.get('old_user_password')
+        new_password = data.get('new_user_password')
+
+        # Validate that the required fields are provided
+        if not all([user_name, user_email, account_description, old_password]):
+            return jsonify({"error": "Missing required fields"}), 400
+
+        # Call the service method to change profile info
+        success, message = UserService.change_profile_info(
+            user_id=user_id,
+            user_name=user_name,
+            user_email=user_email,
+            account_description=account_description,
+            old_password=old_password,
+            new_password=new_password
+        )
+
+        if success:
+            return jsonify({"message": message}), 200
+        else:
+            return jsonify({"error": message}), 400
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @user_controller.route('/change-profile-picture', methods=['PUT'])
 @jwt_required()  # Requires user authentication via JWT
@@ -57,12 +95,30 @@ def change_profile_picture():
 @user_controller.route('/profile-picture/<picture_id>', methods=['GET'])
 def get_profile_picture(picture_id):
     try:
-        # Fetch the picture from GridFS
-        picture = fs.get(ObjectId(picture_id))
+        # Call the service to fetch the picture
+        picture = UserService.get_profile_picture(picture_id)
+        if picture:
+            return send_file(BytesIO(picture.read()), mimetype=picture.content_type)
+        else:
+            return jsonify({"error": "Profile picture not found"}), 404
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@user_controller.route('/profile-picture/email/<email>', methods=['GET'])
+def get_profile_picture_by_email(email):
+    try:
+        # Call the service method to get the profile picture by email
+        picture, error = UserService.get_profile_picture_by_email(email)
+
+        if error:
+            return jsonify({"error": error}), 404
+
+        # Return the profile picture file if it was found
         return send_file(BytesIO(picture.read()), mimetype=picture.content_type)
 
-    except gridfs.errors.NoFile:
-        return jsonify({"error": "Profile picture not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @user_controller.route('/', methods=['GET'])
 def get_users():
