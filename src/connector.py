@@ -14,12 +14,15 @@ from flask_cors import CORS
 import uuid
 from bson.objectid import ObjectId
 import uuid
+from flask import jsonify, request
+from datetime import datetime
 
 client = MongoClient(Constants.DATABASE_URL)
 db = client["CC-database"]
 rooms_collection = db["rooms"]
 users_collection = db["users"]
 messages_collection = db["messages"]
+meetings_collection = db["meetings"]
 #
 app = Flask(__name__)
 app.config["DEBUG"] = False
@@ -83,7 +86,7 @@ app.register_blueprint(statistics_controller, url_prefix="/api/statistics")
 
 from src.modules.room.room_controller import room_controller
 
-app.register_blueprint(room_controller, url_prefix="/api/rooms")
+app.register_blueprint(room_controller, url_prefix="/api/room")
 
 from src.modules.userdata.userdata_controller import userdata_controller
 
@@ -104,169 +107,8 @@ app.register_blueprint(system_usage_controller, url_prefix='/api/system_usages')
 # from src.modules.setting.setting_controller import setting_controller
 # app.register_blueprint(setting_controller, url_prefix='/api/setting')
 
-import os
-import requests
-from flask import request, jsonify
-from datetime import datetime
-
-# Metered Secret Key
-METERED_SECRET_KEY = os.environ.get("METERED_SECRET_KEY")
-# Metered Domain
-METERED_DOMAIN = os.environ.get("METERED_DOMAIN")
 
 
-# API Route to create a meeting room
-@app.route("/api/create/room", methods=["POST"])
-def create_room():
-
-    creator_uuid = str(uuid.uuid4())
-
-    r = requests.post(
-        "https://"
-        + METERED_DOMAIN
-        + "/api/v1/room"
-        + "?secretKey="
-        + METERED_SECRET_KEY        
-    )
-
-    data = request.get_json()
-
-    host = data.get("username", "Unknown Host")
-    room_data = r.json()
-    room_data["uuid"] = creator_uuid
-    room_name = room_data.get("roomName")
-    
-
-    # Store the room in MongoDB
-    if room_name:
-        
-        new_room = {
-            "room_name": room_name,
-            "host": host,
-            "created_at": datetime.now(),
-            "ended_at": None,
-            "participants_count": 1,
-            "participants": [
-                { "username": host,
-                    "role": "creator",
-                  "user_id": creator_uuid
-                }
-            ]
-        }
-        rooms_collection.insert_one(new_room)
-        # return {"success": True, "roomName": room_name}
-        print("meeting creation added to db successfully")
-    else:
-        # return {"success": False, "message": "Room creation failed."}
-        print("meeting creation was not added to db")
-
-    return room_data
-
-
-# API Route to validate meeting
-@app.route("/api/validate-meeting")
-def validate_meeting():
-    roomName = request.args.get("roomName")
-    if roomName:
-        r = requests.get(
-            "https://"
-            + METERED_DOMAIN
-            + "/api/v1/room/"
-            + roomName
-            + "?secretKey="
-            + METERED_SECRET_KEY
-        )
-        data = r.json()
-        if data.get("roomName"):
-            return {"roomFound": True}
-        else:
-            return {"roomFound": False}
-    else:
-        return {"success": False, "message": "Please specify roomName"}
-
-
-@app.route("/api/room/join")
-def join_room():
-    room_name = request.args.get("roomName")
-    username = request.args.get("userName")
-    user_role = request.args.get("role")
-
-    if not room_name or not username:
-        return {"success": False, "message": "Room name and username are required."}
-
-    room = rooms_collection.find_one({"room_name": room_name})
-    if not room:
-        return {"success": False, "message": "Room not found."}
-
-    # Check if the user is already in the participants list
-    if username in room.get("participants", []):
-        return {"success": False, "message": "User already in the room."}
-
-    user_uuid = str(uuid.uuid4())
-    # Update the participants list and increment the count
-    # result = rooms_collection.update_one(
-    #     {"room_name": room_name},
-    #     {
-    #         "$addToSet": {
-    #             "participants": {"username": username, "role": user_role, "user_id": str(user_uuid)}
-    #         },  # Add user to participants list if not already present
-    #         "$inc": {"participants_count": 1},  # Increment participants count
-    #     },
-    # )
-
-    # if result.modified_count > 0:
-    if True:
-        room = rooms_collection.find_one({"room_name": room_name})
-        return {"success": True, "participants_count": room["participants_count"], "uuid": str(user_uuid)}
-    return {"success": False, "message": "Room not found."}
-
-
-@app.route("/api/room/leave")
-def leave_room(room_name):
-    result = rooms_collection.update_one(
-        {"room_name": room_name, "participants_count": {"$gt": 0}},
-        {"$inc": {"participants_count": -1}},
-    )
-    if result.modified_count > 0:
-        room = rooms_collection.find_one({"room_name": room_name})
-        return {"success": True, "participants_count": room["participants_count"]}
-    return {"success": False, "message": "Room not found or no participants."}
-
-
-@app.route("/api/room/end", methods=["GET"])
-def end_meeting():
-    room_name = request.args.get("roomName")
-    result = rooms_collection.update_one(
-        {"room_name": room_name, "ended_at": None},
-        {"$set": {"ended_at": datetime.now()}},
-    )
-    if result.modified_count > 0:
-        return {"success": True, "message": "Meeting ended."}
-    return {"success": False, "message": "Room not found or already ended."}
-
-
-@app.route("/api/room/history", methods=["GET"])
-def get_room_history():
-    room_name = request.args.get("roomName")
-    room = meetings_collection.find_one({"room_name": room_name})
-
-    if room:
-        history = {
-            "room_name": room["room_name"],
-            "host": room["host"],
-            "created_at": room["created_at"],
-            "ended_at": room["ended_at"],
-            "participants_count": room["participants_count"],
-        }
-        return {"success": True, "room_history": history}
-
-    return {"success": False, "message": "Room not found."}
-
-
-# API Route to fetch the Metered Domain
-@app.route("/api/metered-domain")
-def get_metered_domain():
-    return {"METERED_DOMAIN": METERED_DOMAIN}
 
 
 @app.route("/")
@@ -318,12 +160,14 @@ def handle_init(data):
         )
 
     room = rooms_collection.find_one({"room_name": roomName})
+    all_users = []
+    if room:
     # Fetch all users except the current one
-    all_users_cursor = room["participants"]
-    all_users = [
-        {"userid": user["user_id"], "username": user["username"], "role": user["role"]}
-        for user in all_users_cursor
-    ]
+        all_users_cursor = room["participants"]
+        all_users = [
+            {"userid": user["user_id"], "username": user["username"], "role": user["role"]}
+            for user in all_users_cursor
+        ]
 
     emit(
         "init_response",

@@ -9,9 +9,10 @@ user_controller = Blueprint('users', __name__)
 
 @user_controller.route('/register', methods=['POST'])
 def register_user():
-    try:
+    try:        
         data = request.get_json()
         body = RegisterUserBody(**data)
+        print('hhhhh', body)
         user_id, token = UserService.register(body)
         if not user_id:
             return jsonify({"error": token}), 400

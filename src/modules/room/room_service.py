@@ -22,10 +22,9 @@ class RoomService:
             return None
 
     @staticmethod
-    def get_one(room_id: str):
+    def get_one(email: str):
         try:
-            print('idididid', room_id)
-            room = db.rooms.find_one({"room_name": room_id})
+            room = db.rooms.find_one({"email": email})
             if room:
                 room['_id'] = str(room['_id'])  # Convert ObjectId to string
                 room['participants'] = [str(participant) for participant in room.get('participants', [])]
@@ -35,9 +34,9 @@ class RoomService:
             return None
 
     @staticmethod
-    def get_all():
+    def get_all(email: str):
         try:
-            rooms = list(db.rooms.find())            
+            rooms = list(db.rooms.find({"email": email}))            
             # for room in rooms:
             #     room['_id'] = str(room['_id'])  # Convert ObjectId to string
             #     room['user_id'] = str(room['user_id'])  # Convert ObjectId to string
