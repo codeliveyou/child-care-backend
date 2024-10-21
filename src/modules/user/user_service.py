@@ -8,6 +8,8 @@ from flask_jwt_extended import create_access_token
 import gridfs
 from io import BytesIO
 
+
+
 client = MongoClient(Constants.DATABASE_URL)
 db = client['CC-database']
 fs = gridfs.GridFS(db)
@@ -54,6 +56,42 @@ class UserService:
         return user_id, token
     
     @staticmethod
+    def change_profile_info(user_id: str, user_name: str, user_email: str, account_description: str, old_password: str, new_password: str):
+        try:
+            # Fetch the user from the database
+            user = db.users.find_one({"_id": ObjectId(user_id)})
+            if not user:
+                return False, "User not found"
+
+            # Verify the old password using bcrypt
+            if not bcrypt.checkpw(old_password.encode('utf-8'), user['user_password_hash'].encode('utf-8')):
+                return False, "Old password is incorrect"
+
+            # Prepare the updates dictionary
+            updates = {
+                "user_name": user_name,
+                "user_email": user_email,
+                "account_description": account_description,
+                "updated_at": datetime.utcnow()
+            }
+
+            # If a new password is provided, hash it and update the password field
+            if new_password:
+                hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
+                updates["user_password_hash"] = hashed_password.decode('utf-8')
+
+            # Update the user's information in the database
+            result = db.users.update_one({"_id": ObjectId(user_id)}, {"$set": updates})
+
+            if result.matched_count > 0:
+                return True, "Profile information updated successfully"
+            return False, "Failed to update profile information"
+
+        except Exception as e:
+            print(f"Error changing profile info: {e}")
+            return False, "Internal server error"
+
+    @staticmethod
     def change_profile_picture(user_id: str, picture_data: bytes, filename: str):
         try:
             # Save the image to GridFS
@@ -72,6 +110,41 @@ class UserService:
         except Exception as e:
             print(f"Error changing profile picture: {e}")
             return False, None
+    
+    @staticmethod
+    def get_profile_picture(picture_id: str):
+        try:
+            # Fetch the picture from GridFS
+            picture = fs.get(ObjectId(picture_id))
+            return picture
+
+        except gridfs.errors.NoFile:
+            return None
+
+    @staticmethod
+    def get_profile_picture_by_email(email: str):
+        try:
+            # Find the user by email
+            user = db.users.find_one({"user_email": email})
+            if not user:
+                return None, "User not found"
+
+            # Check if the user has a profile picture
+            if not user.get("profile_picture"):
+                return None, "No profile picture available"
+
+            # Fetch the picture from GridFS using the picture ID
+            picture_id = user.get("profile_picture")
+            picture = fs.get(ObjectId(picture_id))
+
+            return picture, None
+
+        except gridfs.errors.NoFile:
+            return None, "Profile picture not found"
+
+        except Exception as e:
+            print(f"Error fetching profile picture by email: {e}")
+            return None, "Internal server error"
 
     @staticmethod
     def get_one(user_id: str):
