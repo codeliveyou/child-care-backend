@@ -169,14 +169,24 @@ def create_room():
     room_data = r.json()
     room_data["uuid"] = creator_uuid
     room_name = room_data.get("roomName")
-
+    print("room_data", room_data)
+    patient_name = data.get("patientName")
+    patient_personal_id = data.get("patientPersonalID")
+    avatar_type = data.get("avatarType")
+    voice_type = data.get("voiceType")
+    avatar_name = data.get("avatarName")
     # Store the room in MongoDB
     if room_name:
 
         new_room = {
-            "room_name": room_name,
             "host": host,
             "email": email,
+            "room_name": room_name,
+            "patient_name": patient_name,
+            "patient_personal_id": patient_personal_id,
+            "avatar_type": avatar_type,
+            "voice_type": voice_type,
+            "avatar_name": avatar_name,
             "created_at": datetime.now(),
             "ended_at": None,
             "participants_count": 1,
