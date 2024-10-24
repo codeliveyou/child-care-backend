@@ -211,11 +211,20 @@ def get_current_user():
         user_id = get_jwt_identity()
         user = UserService.get_one(user_id)
         if user:
-            response = {
-                'user_name': user.get('user_name'),
-                'user_email': user.get('user_email'),
-                'account_description': user.get('account_description')
-            }
+            try:
+                response = {
+                    'user_name': user.get('user_name'),
+                    'user_email': user.get('user_email'),
+                    'account_description': user.get('account_description'),
+                    'picture_id': user.get('profile_picture')
+                }
+            except:
+                response = {
+                    'user_name': user.get('user_name'),
+                    'user_email': user.get('user_email'),
+                    'account_description': user.get('account_description'),
+                    'picture_id': 'f854995e19599136b75e1dcefa17184a'
+                }
             return jsonify(response), 200
         return jsonify({"error": "User not found"}), 404
     except Exception as e:
