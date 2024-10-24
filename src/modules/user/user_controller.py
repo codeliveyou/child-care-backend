@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, send_file
+from flask import Blueprint, request, jsonify, send_file, url_for
 from src.modules.user.user_service import UserService
 from src.modules.user.user_dtos import RegisterUserBody, UpdateUserBody
 from flask_jwt_extended import jwt_required, get_jwt_identity
@@ -95,6 +95,10 @@ def change_profile_picture():
 
 @user_controller.route('/profile-picture/<picture_id>', methods=['GET'])
 def get_profile_picture(picture_id):
+    """
+    This endpoint serves the profile picture associated with the given picture_id
+    from GridFS. If the picture is found, it streams the content to the client.
+    """
     try:
         # Call the service to fetch the picture
         picture = UserService.get_profile_picture(picture_id)
@@ -102,12 +106,15 @@ def get_profile_picture(picture_id):
             return send_file(BytesIO(picture.read()), mimetype=picture.content_type)
         else:
             return jsonify({"error": "Profile picture not found"}), 404
-
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 @user_controller.route('/profile-picture/email/<email>', methods=['GET'])
 def get_profile_picture_by_email(email):
+    """
+    This endpoint fetches the profile picture associated with a user email and 
+    returns the public URL where the picture can be accessed.
+    """
     try:
         # Call the service method to get the profile picture by email
         picture, error = UserService.get_profile_picture_by_email(email)
@@ -115,8 +122,9 @@ def get_profile_picture_by_email(email):
         if error:
             return jsonify({"error": error}), 404
 
-        # Return the profile picture file if it was found
-        return send_file(BytesIO(picture.read()), mimetype=picture.content_type)
+        # Generate and return a public URL for the profile picture
+        picture_url = url_for('users.get_profile_picture', picture_id=picture._id, _external=True)
+        return jsonify({"picture_url": picture_url}), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
