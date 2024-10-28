@@ -38,6 +38,7 @@ class UserService:
             "user_password_hash": hashed_password.decode('utf-8'),  # Store hashed password
             "user_company_id": company['_id'],  # Associate user with company using ObjectId
             "account_description": body.account_description,  # Include account description
+            "profile_picture": "671a52662b5daf08caafc6b3",
             "created_at": datetime.utcnow(),
             "updated_at": datetime.utcnow()
         }
