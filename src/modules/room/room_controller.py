@@ -133,7 +133,7 @@ def fetch_room_data():
     try:
         data = request.get_json()
         print("data", data)
-        room = RoomService.get_one(data["userEmail"])
+        room = RoomService.get_one(data["roomName"])
         return jsonify({"data": room}), 200
     except ValidationError as e:
         return jsonify({"error": e.errors()}), 400

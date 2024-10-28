@@ -30,7 +30,7 @@ def start_scheduler():
     scheduler.start()
 
 def run_server():
-    cors = CORS(app)
+    CORS(app, resources={"/*": {"origins": "*"}})
     DatabaseUtils.init_cluster_db(Constants.DATABASE_URL)
     
     # werkzeug.run_simple('0.0.0.0', int(Constants.PORT),

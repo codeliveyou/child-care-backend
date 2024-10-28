@@ -22,9 +22,9 @@ class RoomService:
             return None
 
     @staticmethod
-    def get_one(email: str):
+    def get_one(room_name: str):
         try:
-            room = db.rooms.find_one({"email": email})
+            room = db.rooms.find_one({"room_name": room_name})
             if room:
                 room['_id'] = str(room['_id'])  # Convert ObjectId to string
                 room['participants'] = [str(participant) for participant in room.get('participants', [])]
