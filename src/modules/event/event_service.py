@@ -4,6 +4,7 @@ from bson.objectid import ObjectId
 from datetime import datetime
 from flask_jwt_extended import get_jwt_identity
 from constants import Constants
+from datetime import datetime, timezone
 
 client = MongoClient(Constants.DATABASE_URL)
 db = client['CC-database']
@@ -44,10 +45,10 @@ class EventService:
             for event in events:
                 event['_id'] = str(event['_id'])
                 event['user_id'] = str(event['user_id'])
-                event['start_time'] = event['start_time'].isoformat()
-                event['end_time'] = event['end_time'].isoformat()
-                event['created_at'] = event['created_at'].isoformat() if event.get('created_at') else None
-                event['updated_at'] = event['updated_at'].isoformat() if event.get('updated_at') else None
+                # event['start_time'] = event['start_time'].astimezone(timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + "+00:00"
+                # event['end_time'] = event['end_time'].astimezone(timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + "+00:00"
+                # event['created_at'] = event['created_at'].astimezone(timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + "+00:00" if event.get('created_at') else None
+                # event['updated_at'] = event['updated_at'].astimezone(timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + "+00:00" if event.get('updated_at') else None
 
             return events
         except Exception as e:
