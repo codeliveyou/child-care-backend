@@ -115,6 +115,7 @@ def fetch_rooms_data():
                 else None
             ),
             "participants_count": room["participants_count"],
+            "avatar_type": room["avatar_type"]
         }
 
     try:
