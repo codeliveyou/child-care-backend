@@ -81,3 +81,26 @@ class RoomService:
         except Exception as e:
             print(f"Error deleting all rooms: {e}")
             return False
+        
+    @staticmethod
+    def check_patient_authentication(roomId, password):
+        try:
+            room = db.rooms.find_one({"room_name": roomId})
+            if room['patient_password'] == password:
+                return True
+            return False
+        except Exception as e:
+            print(f"Error authenticating patient: {e}")
+            return False
+    
+    @staticmethod
+    def check_guest_authentication(roomId, password):
+        try:
+            room = db.rooms.find_one({"room_name": roomId})
+            if room['guest_password'] == password:
+                return True
+            return False
+        except Exception as e:
+            print(f"Error authenticating patient: {e}")
+            return False
+

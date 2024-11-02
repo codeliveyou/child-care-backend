@@ -116,7 +116,7 @@ def fetch_rooms_data():
             ),
             "participants_count": room["participants_count"],
             "avatar_type": room["avatar_type"],
-            "patient_name": room["patient_name"]
+            "patient_name": room["patient_name"],
         }
 
     try:
@@ -177,6 +177,8 @@ def create_room():
     avatar_type = data.get("avatarType")
     voice_type = data.get("voiceType")
     avatar_name = data.get("avatarName")
+    patient_password = data.get("p_pass")
+    guest_password = data.get("g_pass")
     # Store the room in MongoDB
     if room_name:
 
@@ -186,6 +188,8 @@ def create_room():
             "room_name": room_name,
             "patient_name": patient_name,
             "patient_personal_id": patient_personal_id,
+            "patient_password": patient_password,
+            "guest_password": guest_password,
             "avatar_type": avatar_type,
             "voice_type": voice_type,
             "avatar_name": avatar_name,
@@ -288,8 +292,8 @@ def leave_room():
             {"room_name": room_name},
             {
                 "$pull": {"participants": {"username": username, "role": role}},
-                "$inc": {"participants_count": -1}
-            }
+                "$inc": {"participants_count": -1},
+            },
         )
         print(2)
 
@@ -297,7 +301,10 @@ def leave_room():
             print(3)
             room = rooms_collection.find_one({"room_name": room_name})
             return {"success": True, "participants_count": room["participants_count"]}
-        return {"success": False, "message": "User not found in the room or room doesn't exist."}
+        return {
+            "success": False,
+            "message": "User not found in the room or room doesn't exist.",
+        }
     except Exception as e:
         print("Error: ", e)
         return {"success": False, "message": str(e)}
@@ -337,3 +344,26 @@ def get_room_history():
 @room_controller.route("/metered-domain", methods=["GET"])
 def get_metered_domain():
     return {"METERED_DOMAIN": METERED_DOMAIN}
+
+
+@room_controller.route("/check_patient_authentication", methods=["POST"])
+def check_patient_authentication():
+    data = request.get_json()
+    room_id = data.get("roomName")
+    patient_password = data.get("patientPassword")
+    rlt = RoomService.check_patient_authentication(room_id, patient_password)
+    if rlt == True:
+        return {"message": "ok"}
+
+    return {"message": "no"}
+
+
+@room_controller.route("/check_guest_authentication", methods=["POST"])
+def check_guest_authentication():
+    data = request.get_json()
+    room_id = data.get("roomName")
+    guest_password = data.get("guestPassword")
+    rlt = RoomService.check_guest_authentication(room_id, guest_password)
+    if rlt == True:
+        return {"message": "ok"}
+    return {"message": "no"}
