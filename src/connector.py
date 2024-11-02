@@ -61,48 +61,40 @@ redoc = OpenAPI(endpoint="/docs/redoc/", ui="redoc", name="redoc")
 redoc.register(app)
 # BP REG
 from src.modules.root.root_controller import root_controller
-
 app.register_blueprint(root_controller, url_prefix="/api")
 
 from src.modules.user.user_controller import user_controller
-
 app.register_blueprint(user_controller, url_prefix="/api/users")
 
 from src.modules.admin.admin_controller import admin_controller
-
 app.register_blueprint(admin_controller, url_prefix="/api/admins")
 
 from src.modules.company.company_controller import company_controller
-
 app.register_blueprint(company_controller, url_prefix="/api/companys")
 
 from src.modules.invoice.invoice_controller import invoice_controller
-
 app.register_blueprint(invoice_controller, url_prefix="/api/invoices")
 
 from src.modules.statistics.statistics_controller import statistics_controller
-
 app.register_blueprint(statistics_controller, url_prefix="/api/statistics")
 
 from src.modules.room.room_controller import room_controller
-
 app.register_blueprint(room_controller, url_prefix="/api/room")
 
 from src.modules.userdata.userdata_controller import userdata_controller
-
 app.register_blueprint(userdata_controller, url_prefix="/api/userdatas")
 
 from src.modules.user_activity.user_activity_controller import user_activity_controller
-
 app.register_blueprint(user_activity_controller, url_prefix="/api/user_activitys")
 
 from src.modules.company_activity.company_activity_controller import company_activity_controller
-
 app.register_blueprint(company_activity_controller, url_prefix='/api/company_activitys')
 
 from src.modules.system_usage.system_usage_controller import system_usage_controller
-
 app.register_blueprint(system_usage_controller, url_prefix='/api/system_usages')
+
+from src.modules.event.event_controller import event_controller
+app.register_blueprint(event_controller, url_prefix='/api/events')
 
 # from src.modules.setting.setting_controller import setting_controller
 # app.register_blueprint(setting_controller, url_prefix='/api/setting')
@@ -439,3 +431,4 @@ def get_creator_sid():
     """Return the SID of the Room Creator."""
     creator = users_collection.find_one({"role": "creator"})
     return creator["sid"] if creator else None
+
