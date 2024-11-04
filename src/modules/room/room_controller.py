@@ -20,12 +20,8 @@ meetings_collection = db["meetings"]
 def fetch_rooms_data():
 
     def format_created_at(created_at):
-        current_time = datetime.now()
-
-        if created_at.date() == current_time.date():
-            return created_at.strftime("%H:%M")
-        else:
-            return created_at.strftime("%d:%H:%M")
+        # Format as "YYYY-MM-DD HH:MM"
+        return created_at.strftime("%Y-%m-%d %H:%M")
 
     def serialzie_room(room):
         return {
@@ -55,6 +51,7 @@ def fetch_rooms_data():
     except Exception as e:
         print(f"Error in fetching rooms data: {e}")
         return jsonify({"error": str(e)}), 500
+
 
 
 @room_controller.route("/fetch_room_data", methods=["POST"])
