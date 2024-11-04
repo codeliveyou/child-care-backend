@@ -16,78 +16,6 @@ db = client["CC-database"]
 rooms_collection = db["rooms"]
 meetings_collection = db["meetings"]
 
-
-# @room_controller.route('/', methods=['POST'])
-# def create_room():
-#     try:
-#         data = request.get_json()
-#         body = CreateRoomBody(**data)
-#         room_id = RoomService.create(body)
-#         if room_id:
-#             return jsonify({"_id": room_id}), 201
-#         return jsonify({"error": "Failed to create room"}), 500
-#     except ValidationError as e:
-#         return jsonify({"error": e.errors()}), 400
-#     except Exception as e:
-#         print(f"Error in create_room: {e}")
-#         return jsonify({"error": str(e)}), 500
-
-# @room_controller.route('/', methods=['GET'])
-# def get_rooms():
-#     try:
-#         rooms = RoomService.get_all()
-#         return jsonify(rooms), 200
-#     except Exception as e:
-#         print(f"Error in get_rooms: {e}")
-#         return jsonify({"error": str(e)}), 500
-
-# @room_controller.route('/<room_id>', methods=['GET'])
-# def get_room(room_id):
-#     try:
-#         room = RoomService.get_one(room_id)
-#         if room:
-#             return jsonify(room), 200
-#         return jsonify({"error": "Room not found"}), 404
-#     except Exception as e:
-#         print(f"Error in get_room: {e}")
-#         return jsonify({"error": str(e)}), 500
-
-# @room_controller.route('/<room_id>', methods=['PUT'])
-# def update_room(room_id):
-#     try:
-#         data = request.get_json()
-#         body = UpdateRoomBody(**data)
-#         updated_room = RoomService.update_one(room_id, body)
-#         if updated_room:
-#             return jsonify(updated_room), 200
-#         return jsonify({"error": "Room not found"}), 404
-#     except ValidationError as e:
-#         return jsonify({"error": e.errors()}), 400
-#     except Exception as e:
-#         print(f"Error in update_room: {e}")
-#         return jsonify({"error": str(e)}), 500
-
-# @room_controller.route('/<room_id>', methods=['DELETE'])
-# def delete_room(room_id):
-#     try:
-#         success = RoomService.delete_one(room_id)
-#         if success:
-#             return jsonify({"message": "Room deleted successfully"}), 200
-#         return jsonify({"error": "Room not found"}), 404
-#     except Exception as e:
-#         print(f"Error in delete_room: {e}")
-#         return jsonify({"error": str(e)}), 500
-
-# @room_controller.route('/delete-all', methods=['DELETE'])
-# def delete_all_rooms():
-#     try:
-#         RoomService.delete_all()
-#         return jsonify({"message": "All rooms deleted successfully"}), 200
-#     except Exception as e:
-#         print(f"Error in delete_all_rooms: {e}")
-#         return jsonify({"error": str(e)}), 500
-
-
 @room_controller.route("/fetch_rooms_data", methods=["POST"])
 def fetch_rooms_data():
 
@@ -250,18 +178,7 @@ def join_room():
         return {"success": False, "message": "User already in the room."}
 
     user_uuid = str(uuid.uuid4())
-    # Update the participants list and increment the count
-    # result = rooms_collection.update_one(
-    #     {"room_name": room_name},
-    #     {
-    #         "$addToSet": {
-    #             "participants": {"username": username, "role": user_role, "user_id": str(user_uuid)}
-    #         },  # Add user to participants list if not already present
-    #         "$inc": {"participants_count": 1},  # Increment participants count
-    #     },
-    # )
 
-    # if result.modified_count > 0:
     if True:
         room = rooms_collection.find_one({"room_name": room_name})
         return {
