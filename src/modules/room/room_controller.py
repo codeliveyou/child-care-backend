@@ -46,11 +46,18 @@ def fetch_rooms_data():
     try:
         data = request.get_json()
         rooms = RoomService.get_all(data["userEmail"])
-        serialzied_rooms = [serialzie_room(room) for room in rooms]
+        
+        # Sort rooms by 'created_at' in ascending order
+        rooms_sorted = sorted(rooms, key=lambda room: room["created_at"], reverse = True)
+
+        # Serialize the sorted rooms
+        serialzied_rooms = [serialzie_room(room) for room in rooms_sorted]
+        
         return jsonify(serialzied_rooms), 200
     except Exception as e:
         print(f"Error in fetching rooms data: {e}")
         return jsonify({"error": str(e)}), 500
+
 
 
 
