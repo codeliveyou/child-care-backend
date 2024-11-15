@@ -11,16 +11,33 @@ fs = gridfs.GridFS(db)
 class FileSystemService:
 
     @staticmethod
+    def determine_file_type(filename: str) -> str:
+        video_extensions = ['.mp4', '.avi', '.mkv', '.mov']
+        document_extensions = ['.txt', '.doc', '.docx', '.pdf', '.xls', '.xlsx']
+
+        extension = filename.split('.')[-1].lower()
+        if f".{extension}" in video_extensions:
+            return "video"
+        elif f".{extension}" in document_extensions:
+            return "document"
+        return "unknown"
+
+    @staticmethod
     def upload_file(user_id: str, folder_name: str, file_data: bytes, filename: str, content_type: str):
         try:
             # Calculate file size in bytes
             file_size = len(file_data)
 
-            # Metadata for file tracking, including file size
+            # Determine file type
+            file_type = FileSystemService.determine_file_type(filename)
+
+            # Metadata for file tracking, including file size and type
             metadata = {
                 "user_id": user_id,
                 "folder_name": folder_name,
                 "file_size": file_size,  # New file size field
+                "file_directory": folder_name,  # Store directory name
+                "file_type": file_type,  # Store file type
                 "upload_date": datetime.utcnow()
             }
 
@@ -40,7 +57,9 @@ class FileSystemService:
             "file_id": str(file._id),
             "filename": file.filename,
             "file_size": file.metadata.get("file_size", 0),  # Retrieve file size
-            "upload_date": file.metadata["upload_date"]
+            "upload_date": file.metadata["upload_date"],
+            "file_directory": file.metadata.get("file_directory", ""),
+            "file_type": file.metadata.get("file_type", "unknown")
         } for file in files]
 
     @staticmethod

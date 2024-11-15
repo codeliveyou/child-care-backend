@@ -73,8 +73,6 @@ def download_file(file_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
-
 @file_system_controller.route('/file/<file_id>', methods=['GET'])
 def get_file_by_id(file_id):
     """

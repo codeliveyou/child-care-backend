@@ -97,7 +97,7 @@ from src.modules.event.event_controller import event_controller
 app.register_blueprint(event_controller, url_prefix='/api/events')
 
 from src.modules.file_system.file_system_controller import file_system_controller
-app.register_blueprint(event_controller, url_prefix='/api/file_system')
+app.register_blueprint(file_system_controller, url_prefix='/api/file_system')
 
 
 # from src.modules.setting.setting_controller import setting_controller
