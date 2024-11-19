@@ -103,3 +103,56 @@ def get_file_url(file_id):
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@file_system_controller.route('/recent-files', methods=['GET'])
+@jwt_required()
+def get_recent_files():
+    try:
+        # Get user ID from JWT
+        user_id = get_jwt_identity()
+
+        # Retrieve the top 5 most recent files for the user
+        recent_files = FileSystemService.get_recent_files_by_user(user_id)
+        return jsonify(recent_files), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@file_system_controller.route('/create-folder', methods=['POST'])
+@jwt_required()
+def create_folder():
+    try:
+        # Get user ID from JWT
+        user_id = get_jwt_identity()
+
+        # Get folder_name from request data
+        folder_name = request.json.get("folder_name")
+        if not folder_name:
+            return jsonify({"error": "Folder name is required"}), 400
+
+        # Create the folder
+        result = FileSystemService.create_folder(user_id, folder_name)
+        if result == "Folder created successfully":
+            return jsonify({"message": result}), 201
+        elif result == "Folder already exists":
+            return jsonify({"message": result}), 409
+        else:
+            return jsonify({"error": "Failed to create folder"}), 500
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@file_system_controller.route('/list-folders', methods=['GET'])
+@jwt_required()
+def list_folders():
+    try:
+        # Get user ID from JWT
+        user_id = get_jwt_identity()
+
+        # Retrieve the user's folder list
+        folders = FileSystemService.get_user_folders(user_id)
+        return jsonify(folders), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
