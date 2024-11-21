@@ -3,6 +3,10 @@ from bson.objectid import ObjectId
 import gridfs
 from datetime import datetime
 from constants import Constants
+import xml.etree.ElementTree as ET
+from PyPDF2 import PdfReader
+from docx import Document
+from io import BytesIO
 
 client = MongoClient(Constants.DATABASE_URL)
 db = client['CC-database']
@@ -71,6 +75,67 @@ class FileSystemService:
         except Exception as e:
             print(f"Error retrieving file: {e}")
             return None
+    
+    @staticmethod
+    def get_file_as_xml(file_id: str):
+        try:
+            # Retrieve the file from GridFS
+            file = fs.get(ObjectId(file_id))
+
+            # Determine the file type from content_type or filename
+            file_type = file.metadata.get('content_type', 'unknown')
+            filename = file.filename.lower()
+
+            file_content = None
+
+            if file_type == "text/plain" or filename.endswith('.txt'):
+                # Handle plain text files
+                file_content = file.read().decode('utf-8')
+            elif file_type == "application/pdf" or filename.endswith('.pdf'):
+                # Handle PDF files
+                file_content = FileSystemService.extract_text_from_pdf(file)
+            elif file_type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document" or filename.endswith('.docx'):
+                # Handle DOCX files
+                file_content = FileSystemService.extract_text_from_docx(file)
+
+            if not file_content:
+                return None  # Return None if content extraction failed
+
+            # Convert the file content to XML
+            root = ET.Element("Document")
+            content = ET.SubElement(root, "Content")
+            content.text = file_content
+
+            # Convert the XML structure to a string
+            xml_string = ET.tostring(root, encoding='utf-8', method='xml').decode('utf-8')
+            return xml_string
+
+        except Exception as e:
+            print(f"Error converting file to XML: {e}")
+            return None
+
+    @staticmethod
+    def extract_text_from_pdf(file):
+        try:
+            pdf_reader = PdfReader(BytesIO(file.read()))
+            text = ""
+            for page in pdf_reader.pages:
+                text += page.extract_text()
+            return text
+        except Exception as e:
+            print(f"Error extracting text from PDF: {e}")
+            return None
+
+    @staticmethod
+    def extract_text_from_docx(file):
+        try:
+            docx = Document(BytesIO(file.read()))
+            text = "\n".join([paragraph.text for paragraph in docx.paragraphs])
+            return text
+        except Exception as e:
+            print(f"Error extracting text from DOCX: {e}")
+            return None
+
 
     @staticmethod
     def get_recent_files_by_user(user_id: str, limit: int = 5):

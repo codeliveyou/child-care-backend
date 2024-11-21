@@ -5,6 +5,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from pydantic import ValidationError
 from werkzeug.utils import secure_filename
 from io import BytesIO
+from flask import Response
 
 file_system_controller = Blueprint('file_system', __name__)
 
@@ -86,6 +87,24 @@ def get_file_by_id(file_id):
             return send_file(BytesIO(file.read()), download_name=file.filename, mimetype=file.content_type)
         else:
             return jsonify({"error": "File not found"}), 404
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@file_system_controller.route('/file-as-xml/<file_id>', methods=['GET'])
+@jwt_required()
+def get_file_as_xml(file_id):
+    """
+    Provides the file content as XML.
+    """
+    try:
+        # Fetch the XML string from the service
+        xml_data = FileSystemService.get_file_as_xml(file_id)
+        if xml_data:
+            # Return the XML response using Flask's Response object
+            return Response(xml_data, status=200, mimetype='application/xml')
+        else:
+            return jsonify({"error": "Unsupported file type or unable to extract content"}), 400
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500

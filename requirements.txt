@@ -26,3 +26,5 @@ bcrypt
 PyJWT
 flask_socketio
 eventlet
+PyPDF2
+python-docx
