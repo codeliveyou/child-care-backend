@@ -21,9 +21,9 @@ class FileSystemService:
 
         extension = filename.split('.')[-1].lower()
         if f".{extension}" in video_extensions:
-            return "video"
+            return extension
         elif f".{extension}" in document_extensions:
-            return "document"
+            return extension
         return "unknown"
 
     @staticmethod
