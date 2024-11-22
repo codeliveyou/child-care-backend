@@ -16,13 +16,17 @@ class FileSystemService:
 
     @staticmethod
     def determine_file_type(filename: str) -> str:
-        video_extensions = ['.mp4', '.avi', '.mkv', '.mov']
+        video_extensions = ['.mp4']
         document_extensions = ['.txt', '.doc', '.docx', '.pdf', '.xls', '.xlsx']
 
         extension = filename.split('.')[-1].lower()
         if f".{extension}" in video_extensions:
             return extension
         elif f".{extension}" in document_extensions:
+            if extension == 'txt' or 'docx':
+                return 'doc'
+            if extension == 'xlsx':
+                return 'xls'
             return extension
         return "unknown"
 
