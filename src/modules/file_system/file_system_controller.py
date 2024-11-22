@@ -175,3 +175,37 @@ def list_folders():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@file_system_controller.route('/list-documents', methods=['GET'])
+@jwt_required()
+def list_documents():
+    """
+    Retrieves the list of document files for the authenticated user.
+    """
+    try:
+        # Get user ID from JWT
+        user_id = get_jwt_identity()
+
+        # Retrieve document files
+        document_files = FileSystemService.get_files_by_type(user_id, file_type="doc")
+        return jsonify(document_files), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@file_system_controller.route('/list-videos', methods=['GET'])
+@jwt_required()
+def list_videos():
+    """
+    Retrieves the list of video files for the authenticated user.
+    """
+    try:
+        # Get user ID from JWT
+        user_id = get_jwt_identity()
+
+        # Retrieve video files
+        video_files = FileSystemService.get_files_by_type(user_id, file_type="mp4")
+        return jsonify(video_files), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

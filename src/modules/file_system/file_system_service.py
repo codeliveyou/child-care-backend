@@ -193,3 +193,19 @@ class FileSystemService:
         except Exception as e:
             print(f"Error retrieving folders: {e}")
             return []
+
+    @staticmethod
+    def get_files_by_type(user_id: str, file_type: str):
+        try:
+            # Query GridFS for files matching user_id and file_type
+            files = fs.find({"metadata.user_id": user_id, "metadata.file_type": file_type})
+            return [{
+                "file_id": str(file._id),
+                "filename": file.filename,
+                "file_size": file.metadata.get("file_size", 0),  # Retrieve file size
+                "upload_date": file.metadata["upload_date"],
+                "file_directory": file.metadata.get("file_directory", "")
+            } for file in files]
+        except Exception as e:
+            print(f"Error retrieving files of type {file_type}: {e}")
+            return []
