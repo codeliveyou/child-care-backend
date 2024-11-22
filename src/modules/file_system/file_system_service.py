@@ -204,7 +204,8 @@ class FileSystemService:
                 "filename": file.filename,
                 "file_size": file.metadata.get("file_size", 0),  # Retrieve file size
                 "upload_date": file.metadata["upload_date"],
-                "file_directory": file.metadata.get("file_directory", "")
+                "file_directory": file.metadata.get("file_directory", ""),
+                "file_type": file.metadata.get("file_type", "unknown")
             } for file in files]
         except Exception as e:
             print(f"Error retrieving files of type {file_type}: {e}")
