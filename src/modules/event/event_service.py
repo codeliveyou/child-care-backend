@@ -65,7 +65,7 @@ class EventService:
 
     @staticmethod
     def get_all(user_id: str):
-        events = list(db.events.find({"user_id": user_id}))
+        events = list(db.events.find({"user_id": user_id}).sort("start_time", -1))
         for event in events:
             event["_id"] = str(event["_id"])
         return events
