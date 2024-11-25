@@ -39,7 +39,7 @@ class EventService:
                 "user_id": user_id,  # Match as string to the stored format
                 "start_time": {"$gte": start_datetime},
                 "end_time": {"$lte": end_datetime}
-            }))
+            }).sort("start_time", -1))
 
             # Convert fields for JSON response
             for event in events:
