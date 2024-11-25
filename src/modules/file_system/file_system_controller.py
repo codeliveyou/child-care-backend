@@ -15,14 +15,14 @@ def upload_file():
     try:
         # Get user ID from the JWT token
         user_id = get_jwt_identity()
-        
+
         # Parse JSON data for folder_name
         folder_name = request.form.get("folder_name", "default")
 
         # Get the file from the form data
         if 'file' not in request.files:
             return jsonify({"error": "No file uploaded"}), 400
-        
+
         file = request.files['file']
         filename = secure_filename(file.filename)
 
@@ -77,17 +77,37 @@ def download_file(file_id):
 @file_system_controller.route('/file/<file_id>', methods=['GET'])
 def get_file_by_id(file_id):
     """
-    Provides direct access to a file using its file_id.
+    Provides direct access to a file using its file_id and supports video streaming.
     """
     try:
         # Fetch the file from GridFS
         file = FileSystemService.download_file(file_id)
-        if file:
-            # Return the file as an HTTP response
-            return send_file(BytesIO(file.read()), download_name=file.filename, mimetype=file.content_type)
-        else:
+        if not file:
             return jsonify({"error": "File not found"}), 404
 
+        # Get the file size
+        file_size = file.length
+        range_header = request.headers.get('Range', None)
+        if range_header:
+            # Parse the range header
+            byte_range = range_header.split('=')[1]
+            start, end = byte_range.split('-')
+            start = int(start)
+            end = int(end) if end else file_size - 1
+            chunk_size = (end - start) + 1
+
+            # Read the requested byte range from the file
+            file.seek(start)
+            data = file.read(chunk_size)
+
+            # Create a partial response for the requested range
+            response = Response(data, status=206, mimetype=file.content_type)
+            response.headers.add('Content-Range', f'bytes {start}-{end}/{file_size}')
+            response.headers.add('Accept-Ranges', 'bytes')
+            return response
+        else:
+            # Serve the entire file if no range is specified
+            return Response(file.read(), mimetype=file.content_type)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
