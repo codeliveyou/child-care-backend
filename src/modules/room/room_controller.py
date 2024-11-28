@@ -109,7 +109,8 @@ def create_room():
     avatar_type = data.get("avatarType")
     voice_type = data.get("voiceType")
     avatar_name = data.get("avatarName")
-    guest_password = data.get("g_pass")
+    guest_password = data.get("guest_id")
+    patient_password = data.get("patient_id")
     # Store the room in MongoDB
     if room_name:
 
@@ -120,6 +121,7 @@ def create_room():
             "patient_name": patient_name,
             "patient_personal_id": patient_personal_id,
             "guest_password": guest_password,
+            "patient_password": patient_password,
             "avatar_type": avatar_type,
             "voice_type": voice_type,
             "avatar_name": avatar_name,
@@ -268,11 +270,10 @@ def get_metered_domain():
 @room_controller.route("/check_patient_authentication", methods=["POST"])
 def check_patient_authentication():
     data = request.get_json()
-    room_id = data.get("roomName")
-    # patient_password = data.get("patientPassword")
-    rlt = RoomService.check_patient_authentication(room_id)
-    if rlt == True:
-        return {"message": "ok"}
+    patient_password = data.get("patientPassword")
+    rlt = RoomService.check_patient_authentication(patient_password)
+    if rlt is not False:
+        return {"message": "ok", "roomName": rlt}
 
     return {"message": "no"}
 
@@ -280,9 +281,9 @@ def check_patient_authentication():
 @room_controller.route("/check_guest_authentication", methods=["POST"])
 def check_guest_authentication():
     data = request.get_json()
-    room_id = data.get("roomName")
-    guest_password = data.get("guestPassword")
-    rlt = RoomService.check_guest_authentication(room_id, guest_password)
-    if rlt == True:
-        return {"message": "ok"}
+    guest_name = data.get("guestName")
+    guest_password = data.get("guestId")
+    rlt = RoomService.check_guest_authentication(guest_password)
+    if rlt is not None:
+        return {"message": "ok", "roomName": rlt}
     return {"message": "no"}
