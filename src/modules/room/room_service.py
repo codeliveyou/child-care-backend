@@ -83,12 +83,15 @@ class RoomService:
             return False
         
     @staticmethod
-    def check_patient_authentication(roomId, password):
+    def check_patient_authentication(roomId):
         try:
             room = db.rooms.find_one({"room_name": roomId})
-            if room['patient_password'] == password:
+            is_patient_present = any(participant['role'] == 'patient' for participant in room.get('participants', []))
+
+            if is_patient_present:
+                return False
+            else:
                 return True
-            return False
         except Exception as e:
             print(f"Error authenticating patient: {e}")
             return False
