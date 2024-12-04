@@ -34,11 +34,9 @@ def change_profile_info():
         user_name = data.get('user_name')
         user_email = data.get('user_email')
         account_description = data.get('account_description')
-        old_password = data.get('old_user_password')
-        new_password = data.get('new_user_password')
 
         # Validate that the required fields are provided
-        if not all([user_name, user_email, account_description, old_password]):
+        if not all([user_name, user_email, account_description]):
             return jsonify({"error": "Missing required fields"}), 400
 
         # Call the service method to change profile info
@@ -46,7 +44,37 @@ def change_profile_info():
             user_id=user_id,
             user_name=user_name,
             user_email=user_email,
-            account_description=account_description,
+            account_description=account_description
+        )
+
+        if success:
+            return jsonify({"message": message}), 200
+        else:
+            return jsonify({"error": message}), 400
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@user_controller.route('/change-password', methods=['PUT'])
+@jwt_required()  # Requires user authentication via JWT
+def change_password():
+    try:
+        # Get the current user's ID from the JWT token
+        user_id = get_jwt_identity()
+
+        # Parse the request JSON
+        data = request.get_json()
+        old_password = data.get('old_user_password')
+        new_password = data.get('new_user_password')
+
+        # Validate that the required fields are provided
+        if not all([old_password, new_password]):
+            return jsonify({"error": "Missing required fields"}), 400
+
+        # Call the service method to change the password
+        success, message = UserService.change_password(
+            user_id=user_id,
             old_password=old_password,
             new_password=new_password
         )

@@ -57,7 +57,29 @@ class UserService:
         return user_id, token
     
     @staticmethod
-    def change_profile_info(user_id: str, user_name: str, user_email: str, account_description: str, old_password: str, new_password: str):
+    def change_profile_info(user_id: str, user_name: str, user_email: str, account_description: str):
+        try:
+            # Prepare the updates dictionary
+            updates = {
+                "user_name": user_name,
+                "user_email": user_email,
+                "account_description": account_description,
+                "updated_at": datetime.utcnow()
+            }
+
+            # Update the user's profile information in the database
+            result = db.users.update_one({"_id": ObjectId(user_id)}, {"$set": updates})
+
+            if result.matched_count > 0:
+                return True, "Profile information updated successfully"
+            return False, "Failed to update profile information"
+
+        except Exception as e:
+            print(f"Error updating profile info: {e}")
+            return False, "Internal server error"
+
+    @staticmethod
+    def change_password(user_id: str, old_password: str, new_password: str):
         try:
             # Fetch the user from the database
             user = db.users.find_one({"_id": ObjectId(user_id)})
@@ -68,28 +90,21 @@ class UserService:
             if not bcrypt.checkpw(old_password.encode('utf-8'), user['user_password_hash'].encode('utf-8')):
                 return False, "Old password is incorrect"
 
-            # Prepare the updates dictionary
-            updates = {
-                "user_name": user_name,
-                "user_email": user_email,
-                "account_description": account_description,
+            # Hash the new password
+            hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
+
+            # Update the user's password in the database
+            result = db.users.update_one({"_id": ObjectId(user_id)}, {"$set": {
+                "user_password_hash": hashed_password.decode('utf-8'),
                 "updated_at": datetime.utcnow()
-            }
-
-            # If a new password is provided, hash it and update the password field
-            if new_password:
-                hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
-                updates["user_password_hash"] = hashed_password.decode('utf-8')
-
-            # Update the user's information in the database
-            result = db.users.update_one({"_id": ObjectId(user_id)}, {"$set": updates})
+            }})
 
             if result.matched_count > 0:
-                return True, "Profile information updated successfully"
-            return False, "Failed to update profile information"
+                return True, "Password updated successfully"
+            return False, "Failed to update password"
 
         except Exception as e:
-            print(f"Error changing profile info: {e}")
+            print(f"Error changing password: {e}")
             return False, "Internal server error"
 
     @staticmethod
