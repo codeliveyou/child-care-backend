@@ -108,3 +108,34 @@ class AdminService:
             print(f"Error during admin login: {e}")
             return None, "Internal server error"
     
+    @staticmethod
+    def get_total_rooms_by_admin_email(admin_email: str):
+        try:
+            # Find companies managed by the admin
+            companies = list(db.companies.find({"company_admin_email": admin_email}))
+            # print(f"Found companies: {companies}")  # Debugging log
+
+            total_rooms = 0
+
+            # Collect all user emails associated with the admin's companies
+            user_emails = []
+            for company in companies:
+                # print(f"Processing company: {company}")  # Debugging log
+                users = list(db.users.find({"user_company_id": company["_id"]}))
+                # print(f"Users for company {company['_id']}: {users}")  # Debugging log
+
+                # Add user emails to the list
+                user_emails.extend([user.get("user_email") for user in users if "user_email" in user])
+
+            # print(f"User emails: {user_emails}")  # Debugging log
+
+            # Query the rooms collection to count rooms associated with the collected user emails
+            if user_emails:
+                total_rooms = db.rooms.count_documents({"email": {"$in": user_emails}})
+                # print(f"Total rooms found: {total_rooms}")  # Debugging log
+
+            return total_rooms
+
+        except Exception as e:
+            print(f"Error calculating total rooms: {e}")
+            return None

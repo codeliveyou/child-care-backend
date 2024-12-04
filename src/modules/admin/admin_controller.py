@@ -110,3 +110,23 @@ def get_current_admin():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@admin_controller.route('/total-rooms', methods=['GET'])
+def get_total_rooms():
+    try:
+        # Get admin email from query parameters
+        admin_email = request.args.get('admin_email')
+        if not admin_email:
+            return jsonify({"error": "Admin email is required"}), 400
+
+        # Calculate total rooms using the service
+        total_rooms = AdminService.get_total_rooms_by_admin_email(admin_email)
+
+        if total_rooms is not None:
+            return jsonify({"admin_email": admin_email, "total_rooms": total_rooms}), 200
+        else:
+            return jsonify({"error": "Could not calculate total rooms"}), 500
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
