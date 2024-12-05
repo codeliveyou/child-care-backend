@@ -75,10 +75,12 @@ class FileSystemService:
         try:
             # Retrieve file from GridFS by ID
             file = fs.get(ObjectId(file_id))
+            print(f"File retrieved successfully: {file.filename}, Content-Type: {file.content_type}")
             return file
         except Exception as e:
             print(f"Error retrieving file: {e}")
             return None
+
     
     @staticmethod
     def get_file_as_xml(file_id: str):

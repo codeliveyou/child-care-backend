@@ -139,3 +139,25 @@ class AdminService:
         except Exception as e:
             print(f"Error calculating total rooms: {e}")
             return None
+    
+    @staticmethod
+    def find_company_code_by_user_email(user_email: str):
+        try:
+            # Find the user's company ID
+            user = db.users.find_one({"user_email": user_email})
+            if not user:
+                return None
+
+            company_id = user.get("user_company_id")
+            if not company_id:
+                return None
+
+            # Find the company code using the company ID
+            company = db.companies.find_one({"_id": ObjectId(company_id)})
+            if not company:
+                return None
+
+            return company.get("company_code")
+        except Exception as e:
+            print(f"Error finding company code: {e}")
+            return None

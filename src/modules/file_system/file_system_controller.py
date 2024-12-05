@@ -60,19 +60,27 @@ def list_files():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+# @jwt_required()
 @file_system_controller.route('/download/<file_id>', methods=['GET'])
-@jwt_required()
 def download_file(file_id):
     try:
         # Fetch the file from GridFS
         file = FileSystemService.download_file(file_id)
         if file:
-            return send_file(BytesIO(file.read()), as_attachment=True, download_name=file.filename, mimetype=file.content_type)
+            # Prepare file for streaming response
+            return send_file(
+                BytesIO(file.read()), 
+                as_attachment=True,
+                download_name=file.filename, 
+                mimetype=file.content_type
+            )
         else:
             return jsonify({"error": "File not found"}), 404
 
     except Exception as e:
+        print(f"Error during file download: {e}")  # Add debugging
         return jsonify({"error": str(e)}), 500
+
 
 @file_system_controller.route('/file/<file_id>', methods=['GET'])
 def get_file_by_id(file_id):

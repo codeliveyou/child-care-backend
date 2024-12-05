@@ -14,3 +14,9 @@ class Constants:
     AWS_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY')
     AWS_SECRET_KEY = os.environ.get('AWS_SECRET_KEY')
     BUCKET_NAME = os.environ.get('BUCKET_NAME')
+
+
+    SMTP_SERVER = "smtp.gmail.com"  # Replace with your SMTP server
+    SMTP_PORT = 587  # Replace with your SMTP port
+    SMTP_USERNAME = "the.dream.is.close@gmail.com"  # Replace with your email address
+    SMTP_PASSWORD = "534386"  # Replace with your email password

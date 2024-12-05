@@ -3,7 +3,9 @@ from src.modules.admin.admin_service import AdminService
 from src.modules.admin.admin_dtos import CreateAdminBody, UpdateAdminBody
 from pydantic import ValidationError
 from src.modules.user.user_service import UserService
+from src.modules.admin.email_service import send_email  # Import email sending function
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from constants import Constants
 
 
 admin_controller = Blueprint('admins', __name__)
@@ -130,3 +132,31 @@ def get_total_rooms():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@admin_controller.route('/send-company-code', methods=['POST'])
+@jwt_required()
+def send_company_code():
+    try:
+        # Parse request JSON
+        data = request.get_json()
+        user_email = data.get('user_email')
+
+        if not user_email:
+            return jsonify({"error": "user_email is required"}), 400
+
+        # Find the company code associated with the user
+        company_code = AdminService.find_company_code_by_user_email(user_email)
+        if not company_code:
+            return jsonify({"error": "Company code not found for the provided user email"}), 404
+
+        # Send email with the company code
+        email_subject = "Your Company Code"
+        email_body = f"Dear User,\n\nYour company code is: {company_code}\n\nBest regards,\nAdmin Team"
+
+        # Use the predefined sender email in Constants
+        send_email(Constants.SMTP_USERNAME, user_email, email_subject, email_body)
+        return jsonify({"message": "Email sent successfully"}), 200
+
+    except Exception as e:
+        print(f"Error sending company code: {e}")
+        return jsonify({"error": "Internal server error"}), 500
