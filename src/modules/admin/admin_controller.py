@@ -138,7 +138,7 @@ def send_company_code():
         email_body = f"Dear User,\n\nYour company code is: {company_code}\n\nBest regards,\nAdmin Team"
 
         # Use the predefined sender email in Constants
-        send_email(Constants.SMTP_USERNAME, user_email, email_subject, email_body)
+        send_email(user_email, email_subject, email_body)
         return jsonify({"message": "Email sent successfully"}), 200
 
     except Exception as e:
@@ -194,27 +194,6 @@ def get_companies_and_users():
 
     except ValidationError as e:
         return jsonify({"error": e.errors()}), 400
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
-
-@admin_controller.route('/total-rooms', methods=['GET'])
-def get_total_rooms():
-    try:
-        # Get admin email from query parameters
-        company_admin_email = request.args.get('admin_email')
-        if not company_admin_email:
-            return jsonify({"error": "Admin email is required"}), 400
-
-        # Calculate total rooms using the service
-        total_rooms = AdminService.get_total_rooms_by_admin_email(company_admin_email)
-
-        if total_rooms is not None:
-            return jsonify({"admin_email": company_admin_email, "total_rooms": total_rooms}), 200
-        else:
-            return jsonify({"error": "Could not calculate total rooms"}), 500
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500

@@ -2,7 +2,7 @@ import smtplib
 from email.mime.text import MIMEText
 from constants import Constants  # Assuming you have email credentials stored in a constants file
 
-def send_email(sender_email: str, recipient_email: str, subject: str, body: str):
+def send_email(recipient_email: str, subject: str, body: str):
     try:
         # Create MIMEText object for the email body
         msg = MIMEText(body)
@@ -14,7 +14,7 @@ def send_email(sender_email: str, recipient_email: str, subject: str, body: str)
         with smtplib.SMTP(Constants.SMTP_SERVER, Constants.SMTP_PORT) as server:
             server.starttls()  # Upgrade the connection to secure
             server.login(Constants.SMTP_USERNAME, Constants.SMTP_PASSWORD)  # Login to the email account
-            server.sendmail(sender_email, recipient_email, msg.as_string())  # Send the email
+            server.sendmail('codetankstn@gmail.com', recipient_email, msg.as_string())  # Send the email
 
         print(f"Email sent successfully to {recipient_email}")
 
