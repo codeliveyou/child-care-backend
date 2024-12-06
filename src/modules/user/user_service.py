@@ -332,7 +332,7 @@ class UserService:
                     "account_description": user.get('account_description', '-'),
                     "user_email": user.get('user_email', '-'),
                     "created_at": user.get('created_at').strftime("%d-%m-%Y") if user.get('created_at') else '-',
-                    "use_time": usage_time,
+                    "use_time": round(usage_time, 3),
                     "status": user_status
                 })
             

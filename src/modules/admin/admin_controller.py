@@ -182,12 +182,11 @@ def get_companies_and_users():
                 "company_description": company.get('company_description'),
                 "company_email": company.get('company_email'),
                 "created_at": company.get('created_at').strftime("%d-%m-%Y"),
-                "use_time": company_usage_time,
+                "use_time": round(company_usage_time, 3),
                 "status": company_status,
                 "users": users
             })
         
-
          # Calculate total rooms using the service
         total_rooms = db.rooms.count_documents({"email": {"$in": user_emails}})
 
