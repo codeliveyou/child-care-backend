@@ -13,7 +13,6 @@ def register_user():
     try:        
         data = request.get_json()
         body = RegisterUserBody(**data)
-        print('hhhhh', body)
         user_id, token = UserService.register(body)
         if not user_id:
             return jsonify({"error": token}), 400
@@ -222,7 +221,6 @@ def login_user():
 @user_controller.route('/logout/<user_id>', methods=['POST'])
 def logout_user(user_id):
     try:
-        # Call the service to handle logout
         message = UserService.logout(user_id)
         if "successful" in message:
             return jsonify({"message": message}), 200

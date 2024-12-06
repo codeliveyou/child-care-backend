@@ -84,12 +84,6 @@ app.register_blueprint(room_controller, url_prefix="/api/room")
 from src.modules.userdata.userdata_controller import userdata_controller
 app.register_blueprint(userdata_controller, url_prefix="/api/userdatas")
 
-from src.modules.user_activity.user_activity_controller import user_activity_controller
-app.register_blueprint(user_activity_controller, url_prefix="/api/user_activitys")
-
-from src.modules.company_activity.company_activity_controller import company_activity_controller
-app.register_blueprint(company_activity_controller, url_prefix='/api/company_activitys')
-
 from src.modules.system_usage.system_usage_controller import system_usage_controller
 app.register_blueprint(system_usage_controller, url_prefix='/api/system_usages')
 
@@ -98,13 +92,6 @@ app.register_blueprint(event_controller, url_prefix='/api/events')
 
 from src.modules.file_system.file_system_controller import file_system_controller
 app.register_blueprint(file_system_controller, url_prefix='/api/file_system')
-
-
-# from src.modules.setting.setting_controller import setting_controller
-# app.register_blueprint(setting_controller, url_prefix='/api/setting')
-
-
-
 
 
 @app.route("/")

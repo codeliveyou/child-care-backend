@@ -6,9 +6,13 @@ from src.modules.user.user_service import UserService
 from src.modules.admin.email_service import send_email  # Import email sending function
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from constants import Constants
+from src.modules.company.company_service import CompanyService
+from pymongo import MongoClient
 
 
 admin_controller = Blueprint('admins', __name__)
+client = MongoClient(Constants.DATABASE_URL)
+db = client['CC-database']
 
 @admin_controller.route('/', methods=['POST'])
 def create_admin():
@@ -113,26 +117,6 @@ def get_current_admin():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
-@admin_controller.route('/total-rooms', methods=['GET'])
-def get_total_rooms():
-    try:
-        # Get admin email from query parameters
-        admin_email = request.args.get('admin_email')
-        if not admin_email:
-            return jsonify({"error": "Admin email is required"}), 400
-
-        # Calculate total rooms using the service
-        total_rooms = AdminService.get_total_rooms_by_admin_email(admin_email)
-
-        if total_rooms is not None:
-            return jsonify({"admin_email": admin_email, "total_rooms": total_rooms}), 200
-        else:
-            return jsonify({"error": "Could not calculate total rooms"}), 500
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
 @admin_controller.route('/send-company-code', methods=['POST'])
 @jwt_required()
 def send_company_code():
@@ -160,3 +144,78 @@ def send_company_code():
     except Exception as e:
         print(f"Error sending company code: {e}")
         return jsonify({"error": "Internal server error"}), 500
+
+
+
+@admin_controller.route('/companies-and-users', methods=['POST'])
+def get_companies_and_users():
+    try:
+        # Parse request body
+        data = request.get_json()
+        company_admin_email = data.get('company_admin_email')
+
+        # Fetch companies by admin email
+        companies = CompanyService.get_by_admin_email(company_admin_email)
+
+        # If no companies found, return an empty response
+        if not companies:
+            return jsonify([]), 200
+
+        # Prepare the result with companies and their users
+        companies_and_users_data = []
+        user_emails = []
+        for company in companies:
+            # Fetch users associated with the company
+            users = UserService.get_users_by_company_id(company['_id'])
+
+            company_usage_time = 0
+            company_status = "Inactive"
+            for user in users:
+                user_emails.append(user.get('user_email'))
+                company_usage_time += user.get('use_time')
+                if user.get('status') == 'Active':
+                    company_status = 'Active'
+
+            # Add the users to the company data
+            companies_and_users_data.append({
+                "company_name": company.get('company_name'),
+                "company_description": company.get('company_description'),
+                "company_email": company.get('company_email'),
+                "created_at": company.get('created_at').strftime("%d-%m-%Y"),
+                "use_time": company_usage_time,
+                "status": company_status,
+                "users": users
+            })
+        
+
+         # Calculate total rooms using the service
+        total_rooms = db.rooms.count_documents({"email": {"$in": user_emails}})
+
+        return jsonify({'companies_and_users_data' : companies_and_users_data, "total_rooms": total_rooms}), 200
+
+    except ValidationError as e:
+        return jsonify({"error": e.errors()}), 400
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+
+@admin_controller.route('/total-rooms', methods=['GET'])
+def get_total_rooms():
+    try:
+        # Get admin email from query parameters
+        company_admin_email = request.args.get('admin_email')
+        if not company_admin_email:
+            return jsonify({"error": "Admin email is required"}), 400
+
+        # Calculate total rooms using the service
+        total_rooms = AdminService.get_total_rooms_by_admin_email(company_admin_email)
+
+        if total_rooms is not None:
+            return jsonify({"admin_email": company_admin_email, "total_rooms": total_rooms}), 200
+        else:
+            return jsonify({"error": "Could not calculate total rooms"}), 500
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

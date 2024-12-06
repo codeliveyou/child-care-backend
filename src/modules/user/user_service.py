@@ -37,8 +37,10 @@ class UserService:
             "user_email": body.user_email,
             "user_password_hash": hashed_password.decode('utf-8'),  # Store hashed password
             "user_company_id": company['_id'],  # Associate user with company using ObjectId
-            "account_description": body.account_description,  # Include account description
+            "account_description": body.account_description,
             "profile_picture": "671a52662b5daf08caafc6b3",
+            "usage_time": 0.0,  # Initialize usage time
+            "last_login_time": None,  # Initialize last login time
             "created_at": datetime.utcnow(),
             "updated_at": datetime.utcnow()
         }
@@ -50,10 +52,6 @@ class UserService:
         # Generate JWT token using Flask-JWT-Extended
         token = create_access_token(identity=user_id)
 
-        # Placeholder: Send confirmation email (implement actual email functionality)
-        print(f"Sending confirmation email to {body.user_email}")
-
-        # Return the user ID and the token
         return user_id, token
     
     @staticmethod
@@ -170,6 +168,11 @@ class UserService:
                 user['_id'] = str(user['_id'])  # Convert ObjectId to string
                 if user.get('user_company_id'):
                     user['user_company_id'] = str(user['user_company_id'])  # Convert company ObjectId to string if present
+                
+                # Include usage_time and last_login_time in the response
+                user['usage_time'] = user.get('usage_time', 0.0)
+                user['last_login_time'] = user.get('last_login_time', None)
+
             return user
         except Exception as e:
             print(f"Error fetching user: {e}")
@@ -246,62 +249,63 @@ class UserService:
     @staticmethod
     def login(email, password):
         try:
-            print(f"Attempting to log in with email: {email}")
-
             # Find the user by email
             user = db.users.find_one({"user_email": email})
             if not user:
-                print("User not found")
                 return None, "User not found"
 
             # Verify the password using bcrypt
             if not bcrypt.checkpw(password.encode('utf-8'), user['user_password_hash'].encode('utf-8')):
-                print("Password check failed")
                 return None, "Invalid password"
 
-            # Generate JWT token if login is successful
-            token = create_access_token(identity=str(user['_id']))
+            # Add 2 hours to usage_time and update last_login_time
+            current_time = datetime.utcnow()
+            db.users.update_one(
+                {"_id": user["_id"]},
+                {
+                    "$inc": {"usage_time": 2.0},  # Add 2 hours to usage_time
+                    "$set": {"last_login_time": current_time}  # Update last_login_time
+                }
+            )
 
-            print(f"Login successful, token generated.")
+            # Generate JWT token
+            token = create_access_token(identity=str(user['_id']))
             return token, None
 
         except Exception as e:
-            print(f"Error during login: {e}")
             return None, "Internal server error"
     
     
     @staticmethod
     def logout(user_id):
         try:
-            # Find the most recent login entry for the user (i.e., the one without a logout time)
-            activity = db.user_activity.find_one({
-                "user_id": ObjectId(user_id),
-                "logout_time": None  # Ensure we only find the open session
-            }, sort=[("login_time", -1)])  # Sort by login time to get the latest
+            # Fetch the user by ID
+            user = db.users.find_one({"_id": ObjectId(user_id)})
+            if not user:
+                return "User not found"
 
-            if not activity:
-                return "No active session found for user."
+            # Calculate usage_time adjustment
+            current_time = datetime.utcnow()
+            last_login_time = user.get("last_login_time")
+            if not last_login_time:
+                return "User is not logged in"
 
-            # Record the logout time
-            logout_time = datetime.utcnow()
+            # Calculate time difference and update usage_time
+            time_difference = (current_time - last_login_time).total_seconds() / 3600  # Convert seconds to hours
+            usage_time_adjustment = (-2.0) + time_difference
 
-            # Calculate the activity duration (in seconds)
-            login_time = activity["login_time"]
-            activity_duration = (logout_time - login_time).total_seconds()
+            # Update the user's usage_time and set last_login_time to None
+            db.users.update_one(
+                {"_id": ObjectId(user_id)},
+                {
+                    "$inc": {"usage_time": usage_time_adjustment},
+                    "$set": {"last_login_time": None}
+                }
+            )
 
-            # Update the user_activity log with logout_time and activity_duration
-            update_data = {
-                "logout_time": logout_time,
-                "activity_duration": activity_duration
-            }
-
-            db.user_activity.update_one({"_id": activity["_id"]}, {"$set": update_data})
-
-            print(f"Logout successful, activity duration: {activity_duration} seconds")
             return "Logout successful"
 
         except Exception as e:
-            print(f"Error during logout: {e}")
             return "Internal server error"
 
     @staticmethod
@@ -313,13 +317,23 @@ class UserService:
             # Format the users list
             formatted_users = []
             for user in users:
+                # Determine user's activity
+                user_status = "Active"
+                if user.get('last_login_time') == None or (datetime.utcnow() - user.get('last_login_time')).total_seconds() > 3600 * 2:
+                    user_status = "Inactive"
+                
+                # Calculate user's usage time
+                usage_time = 0 if user.get('usage_time') == None else user.get('usage_time')
+                if user.get('last_login_time') != None and (datetime.utcnow() - user.get('last_login_time')).total_seconds() < 3600 * 2:
+                    usage_time += -2. + (datetime.utcnow() - user.get('last_login_time')).total_seconds() / 3600
+
                 formatted_users.append({
                     "user_name": user.get('user_name'),
                     "account_description": user.get('account_description', '-'),
                     "user_email": user.get('user_email', '-'),
                     "created_at": user.get('created_at').strftime("%d-%m-%Y") if user.get('created_at') else '-',
-                    "use_time": "10h",  # Placeholder for use time
-                    "status": "Active"  # Placeholder for status
+                    "use_time": usage_time,
+                    "status": user_status
                 })
             
             return formatted_users
