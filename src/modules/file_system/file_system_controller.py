@@ -137,6 +137,25 @@ def get_file_as_xml(file_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+# @jwt_required()
+@file_system_controller.route('/file-as-pdf/<file_id>', methods=['GET'])
+def get_pdf_file(file_id):
+    """
+    Serves the PDF file directly.
+    """
+    try:
+        pdf_file = FileSystemService.get_pdf_file(file_id)
+        if pdf_file:
+            return send_file(
+                BytesIO(pdf_file.read()), 
+                mimetype='application/pdf', 
+                as_attachment=False, 
+                download_name=pdf_file.filename
+            )
+        return jsonify({"error": "PDF file not found or invalid type"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @file_system_controller.route('/file-url/<file_id>', methods=['GET'])
 @jwt_required()
 def get_file_url(file_id):
@@ -215,7 +234,7 @@ def list_documents():
         user_id = get_jwt_identity()
 
         # Retrieve document files
-        document_files = FileSystemService.get_files_by_type(user_id, file_type="doc")
+        document_files = FileSystemService.get_files_by_type(user_id, file_type="doc") + FileSystemService.get_files_by_type(user_id, file_type="pdf")
         return jsonify(document_files), 200
 
     except Exception as e:

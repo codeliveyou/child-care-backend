@@ -7,6 +7,7 @@ import xml.etree.ElementTree as ET
 from PyPDF2 import PdfReader
 from docx import Document
 from io import BytesIO
+from flask import send_file
 
 client = MongoClient(Constants.DATABASE_URL)
 db = client['CC-database']
@@ -23,8 +24,10 @@ class FileSystemService:
         if f".{extension}" in video_extensions:
             return extension
         elif f".{extension}" in document_extensions:
-            if extension == 'txt' or 'docx':
+            if extension in ['txt', 'docx', 'doc']:
                 return 'doc'
+            if extension == 'pdf':
+                return 'pdf'
             if extension == 'xlsx':
                 return 'xls'
             return extension
@@ -118,6 +121,18 @@ class FileSystemService:
 
         except Exception as e:
             print(f"Error converting file to XML: {e}")
+            return None
+    
+    @staticmethod
+    def get_pdf_file(file_id: str):
+        try:
+            # Retrieve the file from GridFS
+            file = fs.get(ObjectId(file_id))
+            if file.content_type == "application/pdf" or file.filename.lower().endswith(".pdf"):
+                return file
+            return None
+        except Exception as e:
+            print(f"Error retrieving PDF file: {e}")
             return None
 
     @staticmethod
