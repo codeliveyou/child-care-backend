@@ -9,6 +9,26 @@ from flask import Response
 
 file_system_controller = Blueprint('file_system', __name__)
 
+@file_system_controller.route('/save-document/<file_id>', methods=['POST'])
+@jwt_required()
+def save_document(file_id):
+    try:
+        # Parse the raw XML payload
+        content_xml = request.data.decode("utf-8")  # Decode raw bytes to string
+
+        if not content_xml:
+            return jsonify({"error": "No content provided"}), 400
+
+        if FileSystemService.save_as_docx(file_id, content_xml):
+            return jsonify({"message": "Document saved successfully"}), 200
+        else:
+            return jsonify({"error": "Failed to save document"}), 500
+
+    except Exception as e:
+        print(f"Error in save_document: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
 @file_system_controller.route('/upload', methods=['POST'])
 @jwt_required()
 def upload_file():
@@ -256,3 +276,5 @@ def list_videos():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+

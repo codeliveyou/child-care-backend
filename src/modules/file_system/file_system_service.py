@@ -8,12 +8,70 @@ from PyPDF2 import PdfReader
 from docx import Document
 from io import BytesIO
 from flask import send_file
+from xml.etree.ElementTree import fromstring
+from xml.etree.ElementTree import ElementTree
+
 
 client = MongoClient(Constants.DATABASE_URL)
 db = client['CC-database']
 fs = gridfs.GridFS(db)
 
 class FileSystemService:
+    @staticmethod
+    def save_as_docx(file_id: str, content_xml: str) -> bool:
+        try:
+            # Parse XML content
+            root = fromstring(content_xml)
+
+            # Create a new Word document
+            doc = Document()
+
+            # Iterate through the XML tree and add content to the document
+            for element in root:
+                if element.tag == "Content":  # Handle <Content> tag
+                    doc.add_paragraph(element.text)
+                elif element.tag == "paragraph":  # Handle <paragraph> tag
+                    doc.add_paragraph(element.text)
+                elif element.tag == "heading":  # Handle headings
+                    doc.add_heading(element.text, level=int(element.get("level", 1)))
+                elif element.tag == "list":  # Handle lists
+                    for item in element:
+                        doc.add_paragraph(item.text, style='List Bullet')
+
+            # Save the document to a BytesIO buffer
+            buffer = BytesIO()
+            doc.save(buffer)
+            buffer.seek(0)
+
+            # Overwrite the file with the given `file_id`
+            try:
+                # Fetch the existing file metadata (optional)
+                old_file = fs.get(ObjectId(file_id))
+                metadata = old_file.metadata if old_file else {}
+
+                # Delete the old file
+                fs.delete(ObjectId(file_id))
+
+                # Save the new file with the same metadata
+                fs.put(
+                    buffer,
+                    _id=ObjectId(file_id),  # Explicitly set the file ID
+                    filename="document.docx",
+                    metadata=metadata,
+                    content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                )
+                return True
+
+            except Exception as e:
+                print(f"Error overwriting file: {e}")
+                return False
+
+        except Exception as e:
+            print(f"Error saving document (file_id={file_id}): {e}")
+            print(f"XML Content: {content_xml}")
+            return False
+
+
 
     @staticmethod
     def determine_file_type(filename: str) -> str:
@@ -227,3 +285,5 @@ class FileSystemService:
         except Exception as e:
             print(f"Error retrieving files of type {file_type}: {e}")
             return []
+        
+    
