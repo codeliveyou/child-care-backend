@@ -10,24 +10,15 @@ from flask import Response
 file_system_controller = Blueprint('file_system', __name__)
 
 @file_system_controller.route('/save-document/<file_id>', methods=['POST'])
-@jwt_required()
 def save_document(file_id):
     try:
-        # Parse the raw XML payload
-        content_xml = request.data.decode("utf-8")  # Decode raw bytes to string
-
-        if not content_xml:
-            return jsonify({"error": "No content provided"}), 400
-
+        content_xml = request.data.decode("utf-8")
         if FileSystemService.save_as_docx(file_id, content_xml):
             return jsonify({"message": "Document saved successfully"}), 200
         else:
             return jsonify({"error": "Failed to save document"}), 500
-
     except Exception as e:
-        print(f"Error in save_document: {e}")
         return jsonify({"error": str(e)}), 500
-
 
 @file_system_controller.route('/upload', methods=['POST'])
 @jwt_required()
@@ -139,24 +130,6 @@ def get_file_by_id(file_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@file_system_controller.route('/file-as-xml/<file_id>', methods=['GET'])
-@jwt_required()
-def get_file_as_xml(file_id):
-    """
-    Provides the file content as XML.
-    """
-    try:
-        # Fetch the XML string from the service
-        xml_data = FileSystemService.get_file_as_xml(file_id)
-        if xml_data:
-            # Return the XML response using Flask's Response object
-            return Response(xml_data, status=200, mimetype='application/xml')
-        else:
-            return jsonify({"error": "Unsupported file type or unable to extract content"}), 400
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
 # @jwt_required()
 @file_system_controller.route('/file-as-pdf/<file_id>', methods=['GET'])
 def get_pdf_file(file_id):
@@ -173,20 +146,6 @@ def get_pdf_file(file_id):
                 download_name=pdf_file.filename
             )
         return jsonify({"error": "PDF file not found or invalid type"}), 404
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-@file_system_controller.route('/file-url/<file_id>', methods=['GET'])
-@jwt_required()
-def get_file_url(file_id):
-    """
-    Provides a direct URL to access a file.
-    """
-    try:
-        # Get the URL using Flask's url_for function
-        file_url = url_for('file_system.get_file_by_id', file_id=file_id, _external=True)
-        return jsonify({"file_url": file_url}), 200
-
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

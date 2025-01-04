@@ -17,61 +17,31 @@ db = client['CC-database']
 fs = gridfs.GridFS(db)
 
 class FileSystemService:
+
     @staticmethod
     def save_as_docx(file_id: str, content_xml: str) -> bool:
         try:
-            # Parse XML content
-            root = fromstring(content_xml)
-
-            # Create a new Word document
             doc = Document()
-
-            # Iterate through the XML tree and add content to the document
-            for element in root:
-                if element.tag == "Content":  # Handle <Content> tag
-                    doc.add_paragraph(element.text)
-                elif element.tag == "paragraph":  # Handle <paragraph> tag
-                    doc.add_paragraph(element.text)
-                elif element.tag == "heading":  # Handle headings
-                    doc.add_heading(element.text, level=int(element.get("level", 1)))
-                elif element.tag == "list":  # Handle lists
-                    for item in element:
-                        doc.add_paragraph(item.text, style='List Bullet')
-
-            # Save the document to a BytesIO buffer
+            doc.add_paragraph(content_xml)
             buffer = BytesIO()
             doc.save(buffer)
             buffer.seek(0)
 
-            # Overwrite the file with the given `file_id`
-            try:
-                # Fetch the existing file metadata (optional)
-                old_file = fs.get(ObjectId(file_id))
-                metadata = old_file.metadata if old_file else {}
-
-                # Delete the old file
-                fs.delete(ObjectId(file_id))
-
-                # Save the new file with the same metadata
-                fs.put(
-                    buffer,
-                    _id=ObjectId(file_id),  # Explicitly set the file ID
-                    filename="document.docx",
-                    metadata=metadata,
-                    content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                )
-                return True
-
-            except Exception as e:
-                print(f"Error overwriting file: {e}")
-                return False
-
+            fs.delete(ObjectId(file_id))
+            fs.put(buffer, _id=ObjectId(file_id), filename="document.docx", content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+            return True
         except Exception as e:
-            print(f"Error saving document (file_id={file_id}): {e}")
-            print(f"XML Content: {content_xml}")
+            print(f"Error saving document: {e}")
             return False
 
-
+    @staticmethod
+    def get_file(file_id: str):
+        try:
+            file = fs.get(ObjectId(file_id))
+            return file
+        except Exception as e:
+            print(f"Error fetching file: {e}")
+            return None
 
     @staticmethod
     def determine_file_type(filename: str) -> str:
@@ -143,43 +113,7 @@ class FileSystemService:
             return None
 
     
-    @staticmethod
-    def get_file_as_xml(file_id: str):
-        try:
-            # Retrieve the file from GridFS
-            file = fs.get(ObjectId(file_id))
-
-            # Determine the file type from content_type or filename
-            file_type = file.metadata.get('content_type', 'unknown')
-            filename = file.filename.lower()
-
-            file_content = None
-
-            if file_type == "text/plain" or filename.endswith('.txt'):
-                # Handle plain text files
-                file_content = file.read().decode('utf-8')
-            elif file_type == "application/pdf" or filename.endswith('.pdf'):
-                # Handle PDF files
-                file_content = FileSystemService.extract_text_from_pdf(file)
-            elif file_type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document" or filename.endswith('.docx'):
-                # Handle DOCX files
-                file_content = FileSystemService.extract_text_from_docx(file)
-
-            if not file_content:
-                return None  # Return None if content extraction failed
-
-            # Convert the file content to XML
-            root = ET.Element("Document")
-            content = ET.SubElement(root, "Content")
-            content.text = file_content
-
-            # Convert the XML structure to a string
-            xml_string = ET.tostring(root, encoding='utf-8', method='xml').decode('utf-8')
-            return xml_string
-
-        except Exception as e:
-            print(f"Error converting file to XML: {e}")
-            return None
+    
     
     @staticmethod
     def get_pdf_file(file_id: str):
@@ -192,29 +126,6 @@ class FileSystemService:
         except Exception as e:
             print(f"Error retrieving PDF file: {e}")
             return None
-
-    @staticmethod
-    def extract_text_from_pdf(file):
-        try:
-            pdf_reader = PdfReader(BytesIO(file.read()))
-            text = ""
-            for page in pdf_reader.pages:
-                text += page.extract_text()
-            return text
-        except Exception as e:
-            print(f"Error extracting text from PDF: {e}")
-            return None
-
-    @staticmethod
-    def extract_text_from_docx(file):
-        try:
-            docx = Document(BytesIO(file.read()))
-            text = "\n".join([paragraph.text for paragraph in docx.paragraphs])
-            return text
-        except Exception as e:
-            print(f"Error extracting text from DOCX: {e}")
-            return None
-
 
     @staticmethod
     def get_recent_files_by_user(user_id: str, limit: int = 5):
