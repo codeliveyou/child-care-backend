@@ -209,11 +209,17 @@ def login_user():
         if not email or not password:
             return jsonify({"error": "Email and password are required"}), 400
 
-        token, error = UserService.login(email, password)
+        token, error, user = UserService.login(email, password)
         if error:
             return jsonify({"error": error}), 401
 
-        return jsonify({"token": token}), 200
+        return jsonify({
+            "token": token,
+            'user_name': user.get('user_name'),
+            'user_email': user.get('user_email'),
+            'account_description': user.get('account_description'),
+            'picture_id': user.get('profile_picture')
+        }), 200
 
     except ValidationError as e:
         return jsonify({"error": e.errors()}), 400

@@ -252,11 +252,11 @@ class UserService:
             # Find the user by email
             user = db.users.find_one({"user_email": email})
             if not user:
-                return None, "User not found"
+                return None, "User not found", None
 
             # Verify the password using bcrypt
             if not bcrypt.checkpw(password.encode('utf-8'), user['user_password_hash'].encode('utf-8')):
-                return None, "Invalid password"
+                return None, "Invalid password", None
 
             # Add 2 hours to usage_time and update last_login_time
             current_time = datetime.utcnow()
@@ -270,7 +270,7 @@ class UserService:
 
             # Generate JWT token
             token = create_access_token(identity=str(user['_id']))
-            return token, None
+            return token, None, user
 
         except Exception as e:
             return None, "Internal server error"
