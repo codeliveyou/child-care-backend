@@ -60,9 +60,6 @@ swagger.register(app)
 redoc = OpenAPI(endpoint="/docs/redoc/", ui="redoc", name="redoc")
 redoc.register(app)
 # BP REG
-from src.modules.root.root_controller import root_controller
-app.register_blueprint(root_controller, url_prefix="/api")
-
 from src.modules.user.user_controller import user_controller
 app.register_blueprint(user_controller, url_prefix="/api/users")
 
@@ -80,9 +77,6 @@ app.register_blueprint(statistics_controller, url_prefix="/api/statistics")
 
 from src.modules.room.room_controller import room_controller
 app.register_blueprint(room_controller, url_prefix="/api/room")
-
-from src.modules.userdata.userdata_controller import userdata_controller
-app.register_blueprint(userdata_controller, url_prefix="/api/userdatas")
 
 from src.modules.system_usage.system_usage_controller import system_usage_controller
 app.register_blueprint(system_usage_controller, url_prefix='/api/system_usages')
