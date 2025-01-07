@@ -36,11 +36,7 @@ class RoomService:
     @staticmethod
     def get_all(email: str):
         try:
-            rooms = list(db.rooms.find({"email": email}))            
-            # for room in rooms:
-            #     room['_id'] = str(room['_id'])  # Convert ObjectId to string
-            #     room['user_id'] = str(room['user_id'])  # Convert ObjectId to string
-            #     room['participants'] = [str(participant) for participant in room.get('participants', [])]
+            rooms = list(db.rooms.find({"email": email}))
             return rooms
         except Exception as e:
             print(f"Error fetching rooms: {e}")
