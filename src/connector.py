@@ -1,13 +1,9 @@
-# import eventlet
-# eventlet.monkey_patch()
-
 from datetime import timedelta
 from flask import Flask
 from flask_jwt_extended import JWTManager
-from flask_pydantic_docs import OpenAPI
+from flask_openapi3 import OpenAPI, Info
 from pymongo import MongoClient
 from constants import Constants
-
 
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from flask_cors import CORS
@@ -23,42 +19,22 @@ rooms_collection = db["rooms"]
 users_collection = db["users"]
 messages_collection = db["messages"]
 meetings_collection = db["meetings"]
-#
-app = Flask(__name__)
+
+info = Info(title="Your API", version="1.0.0")
+app = OpenAPI(__name__, info=info)
+
 app.config["DEBUG"] = False
 app.config["CACHE_TYPE"] = "null"
 app.config["JWT_SECRET_KEY"] = "super-secret"
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=7)
-
 
 CORS(app, resources={r"/*": {"origins": "*"}})
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 connected_users = {}
 
-
 jwt = JWTManager(app)
-# openapi
-swagger = OpenAPI(
-    endpoint="/docs/swagger/",
-    ui="swagger",
-    name="swagger",
-    extra_props={
-        "components": {
-            "securitySchemes": {
-                "bearerAuth": {
-                    "type": "http",
-                    "scheme": "bearer",
-                    "bearerFormat": "JWT",
-                }
-            }
-        },
-        "security": [{"bearerAuth": []}],
-    },
-)
-swagger.register(app)
-redoc = OpenAPI(endpoint="/docs/redoc/", ui="redoc", name="redoc")
-redoc.register(app)
+
 # BP REG
 from src.modules.user.user_controller import user_controller
 app.register_blueprint(user_controller, url_prefix="/api/users")
@@ -87,11 +63,9 @@ app.register_blueprint(event_controller, url_prefix='/api/events')
 from src.modules.file_system.file_system_controller import file_system_controller
 app.register_blueprint(file_system_controller, url_prefix='/api/file_system')
 
-
 @app.route("/")
 def index():
     return "Backend"
-
 
 ###################################
 
